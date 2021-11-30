@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:descendantFocusability="blocksDescendants"
+    android:orientation="horizontal">
+    <TextView
+        android:layout_width="30dp"
+        android:layout_height="wrap_content"
+        android:gravity="left"
+        android:layout_margin="5dp"
+        android:text="No"
+        android:id="@+id/textView_id" />
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="left"
+        android:text="EPC"
+        android:layout_margin="5dp"
+        android:width="100dp"
+        android:id="@+id/textView_epc" />
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="left"
+        android:text="Barang"
+        android:layout_margin="5dp"
+        android:width="130dp"
+        android:id="@+id/textView_barang" />
+	<TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="left"
+        android:width="80dp"
+        android:layout_margin="5dp"
+        android:ems="2"
+        android:text="Room"
+        android:id="@+id/textView_rssi" />
+    <TextView
+        android:layout_width="50dp"
+        android:layout_height="wrap_content"
+        android:gravity="left"
+        android:layout_weight="1"
+        android:layout_margin="5dp"
+        android:text="Berat"
+        android:id="@+id/textView_berat" />
+    <CheckBox
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:id="@+id/chk_check" />
+<!--    <ImageView-->
+<!--        android:layout_width="60dp"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:src="@drawable/ic_edit"-->
+<!--        android:id="@+id/imgEdit"/>-->
+</LinearLayout>

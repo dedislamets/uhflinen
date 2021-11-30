@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:orientation="horizontal">
+    <TextView
+        android:layout_width="30dp"
+        android:layout_height="wrap_content"
+        android:gravity="left"
+        android:layout_margin="5dp"
+        android:text="No"
+        android:id="@+id/textView_id" />
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="left"
+        android:text="EPC"
+        android:layout_margin="5dp"
+        android:width="100dp"
+        android:id="@+id/textView_epc" />
+    <TextView
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:gravity="left"
+        android:text="Barang"
+        android:layout_margin="5dp"
+        android:layout_weight="1"
+        android:id="@+id/textView_barang" />
+    <TextView
+        android:layout_width="50dp"
+        android:layout_height="wrap_content"
+        android:gravity="left"
+        android:layout_margin="5dp"
+        android:text="Berat"
+        android:id="@+id/textView_berat" />
+</LinearLayout>

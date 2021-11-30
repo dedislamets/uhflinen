@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".ListKotorActivity"
+    android:background="@color/colorWhite">
+
+<!--    <include-->
+<!--        android:id="@+id/header"-->
+<!--        layout="@layout/header_main" />-->
+<!--    >-->
+    <TextView
+        android:layout_width="match_parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:layout_height="wrap_content"
+        android:paddingTop="15dp"
+        android:paddingBottom="15dp"
+        android:paddingLeft="25dp"
+        android:textStyle="bold"
+        android:text="List Scan"
+        android:textSize="24dp"
+        android:id="@+id/h1"/>
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/tombol_menu"
+        app:layout_constraintTop_toBottomOf="@id/h1"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintLeft_toLeftOf="parent"
+            android:gravity="center"
+            android:padding="5dp">
+
+            <Button
+                android:id="@+id/btnAdd"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:background="@drawable/btn_gradient"
+                android:layout_weight="1"
+                android:layout_marginRight="10dp"
+                android:textColor="@color/colorWhite"
+                android:drawableLeft="@drawable/ic_add_black_24dp"
+                android:drawableTint="@color/colorWhite"
+                android:text="Tambah Linen"/>
+
+            <Button
+                android:id="@+id/button_eksport"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:background="@drawable/btn_gradient"
+                android:minWidth="150dp"
+                android:textColor="@color/colorWhite"
+                android:drawableLeft="@drawable/ic_eksport_24dp"
+                android:drawableTint="@color/colorWhite"
+                android:text="Export"/>
+
+        </LinearLayout>
+
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:id="@+id/filter"
+        android:padding="20dp"
+        app:layout_constraintTop_toBottomOf="@id/tombol_menu"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="20dp"
+            android:text="Tanggal : " />
+
+
+        <EditText
+            android:id="@+id/tanggal"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="16dp"
+            android:layout_weight="1"
+            android:cursorVisible="false"
+
+            android:focusableInTouchMode="false"
+            android:hint="Tanggal"></EditText>
+        <ImageView
+            android:id="@+id/imgPhone"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="11dp"
+            app:srcCompat="@drawable/ic_date_range_black_24dp"></ImageView>
+    </LinearLayout>
+
+    <ListView
+        android:id="@+id/list"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        tools:listitem="@layout/list_row"
+        android:clipToPadding="true"
+        android:divider="@null"
+        android:dividerHeight="10dp"
+        android:listSelector="@layout/list_selector"
+        app:layout_constraintTop_toBottomOf="@id/filter"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"/>
+
+    <RelativeLayout
+        android:id="@+id/layout_empty"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
+
+
+        <TextView
+            android:id="@+id/text_empty"
+            android:layout_width="match_parent"
+            android:layout_height="400dp"
+            android:gravity="center"
+            android:text="No Data!"
+            android:textAlignment="center"
+            android:textColor="@color/colorAccent"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
+
+    </RelativeLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        android:padding="5dp"
+        android:visibility="visible"
+        android:orientation="horizontal">
+        <Button
+            android:id="@+id/button_sync"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:background="@drawable/btn_gradient"
+            android:layout_margin="10dp"
+            android:drawableLeft="@drawable/ic_sync_black_24dp"
+            android:drawableTint="@color/colorWhite"
+            android:textColor="@color/colorWhite"
+            android:text="Syncronize"/>
+
+    </LinearLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

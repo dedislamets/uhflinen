@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+    <RelativeLayout
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="10dip" >
+
+        <LinearLayout android:id="@+id/thumbnail"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="3dip"
+            android:layout_alignParentLeft="true"
+            android:background="@layout/image_bg"
+            android:layout_marginRight="5dip">
+
+            <ImageView
+                android:id="@+id/list_image"
+                android:layout_width="50dip"
+                android:layout_height="50dip"
+                android:src="@drawable/rfid"/>
+
+        </LinearLayout>
+        <TextView
+            android:id="@+id/short_msg"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignTop="@id/thumbnail"
+            android:layout_toRightOf="@+id/thumbnail"
+            android:text="Short Message"
+            android:textSize="15dip"
+            android:textStyle="bold" />
+
+        <!-- Artist Name -->
+        <TextView
+            android:id="@+id/waktu"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/short_msg"
+            android:layout_marginTop="1dip"
+            android:layout_toRightOf="@id/thumbnail"
+            android:text="Waktu Insert"
+            android:textSize="15sp" />
+
+        <TextView
+            android:id="@+id/id_notifikasi"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/waktu"
+            android:visibility="gone"
+            android:textStyle="bold" />
+        <TextView
+            android:id="@+id/page_url"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/id_notifikasi"
+            android:visibility="gone"
+            android:textStyle="bold" />
+    </RelativeLayout>
+    <View
+        android:background="@color/colorPrimary"
+        android:layout_width="match_parent"
+       android:layout_marginLeft="30dp"
+        android:layout_marginRight="30dp"
+        android:layout_height="2dp"/>
+</LinearLayout>

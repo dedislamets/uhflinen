@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:id="@+id/action_notification"
+        app:actionLayout="@layout/notification"
+        app:showAsAction="always"
+        android:title="Notifications" />
+    <item android:id="@+id/menuHome"
+        android:icon="@drawable/ic_home"
+        android:title="Home" />
+    <item android:id="@+id/menuMonitor"
+        android:icon="@drawable/ic_scanner_black_24dp"
+        android:title="Security" />
+    <item android:id="@+id/menuRequest"
+        android:icon="@drawable/ic_description_black_24dp"
+        android:title="Request" />
+    <item android:id="@+id/menuSettings"
+        android:icon="@drawable/ic_settings"
+        android:title="Settings" />
+</menu>

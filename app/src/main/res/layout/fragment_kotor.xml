@@ -1,0 +1,283 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_height="match_parent"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:id="@+id/imgNo"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="11dp"
+                app:srcCompat="@drawable/ic_receipt_black_24dp"></ImageView>
+
+            <EditText
+                android:id="@+id/no_transaksi"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginLeft="16dp"
+                android:focusable="false"
+                android:enabled="false"
+                android:layout_marginRight="16dp"
+                android:hint="No Transaksi"></EditText>
+
+            <ImageView
+                android:id="@+id/imgPhone"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="11dp"
+                app:srcCompat="@drawable/ic_date_range_black_24dp"></ImageView>
+
+            <EditText
+                android:id="@+id/tanggal"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginLeft="16dp"
+                android:cursorVisible="false"
+                android:enabled="false"
+                android:focusable="false"
+                android:focusableInTouchMode="false"
+                android:hint="Tanggal"></EditText>
+        </LinearLayout>
+
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="16dp">
+            <ImageView
+                android:id="@+id/imgEmail"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:srcCompat="@drawable/ic_person_black_24dp"></ImageView>
+
+            <Spinner android:id="@+id/spinner_pic"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:background="@drawable/spinner_border"
+                android:layout_marginLeft="16dp"
+                android:layout_marginRight="16dp"
+                />
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:visibility="gone"
+            android:layout_marginTop="16dp">
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:srcCompat="@drawable/ic_label"></ImageView>
+
+            <Spinner android:id="@+id/spinner_kategori"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:background="@drawable/spinner_border"
+                android:layout_marginLeft="16dp"
+                android:layout_marginRight="16dp"
+                />
+        </LinearLayout>
+
+
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="5dp"
+        android:layout_marginLeft="5dp"
+        android:layout_marginRight="5dp"
+        android:id="@+id/linear_sum"
+        android:background="@color/gre2">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/colorWhite"
+            android:text="@string/all_epc_sum"
+            />
+
+        <TextView
+            android:layout_width="180dp"
+            android:layout_height="wrap_content"
+            android:text=" "
+            android:id="@+id/textView_tag"
+            android:textColor="@color/colorWhite"
+            android:layout_marginRight="20dp" />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/colorWhite"
+            android:text="Total Berat : "
+            />
+
+        <TextView
+            android:layout_width="180dp"
+            android:layout_height="wrap_content"
+            android:textColor="@color/colorWhite"
+            android:text=" "
+            android:id="@+id/textView_total_berat" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/linear_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:visibility="gone"
+        android:background="@color/gre2">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:layout_margin="5dp"
+            android:textColor="@color/colorWhite"
+            android:text="No."
+            />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="5dp"
+            android:width="100dp"
+            android:textColor="@color/colorWhite"
+            android:text="Serial"
+            android:textAlignment="textStart" />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:width="150dp"
+            android:layout_margin="5dp"
+            android:textColor="@color/colorWhite"
+            android:textAlignment="textStart"
+            android:text="Nama Barang"
+            />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="left"
+            android:layout_margin="5dp"
+            android:textColor="@color/colorWhite"
+            android:text="Ruangan"
+            android:id="@+id/textView_rssi" />
+        <TextView
+            android:layout_width="50dp"
+            android:layout_height="wrap_content"
+            android:gravity="left"
+            android:layout_margin="5dp"
+            android:textColor="@color/colorWhite"
+            android:text="Berat"
+            android:layout_weight="1"
+            android:id="@+id/textView_berat" />
+
+    </LinearLayout>
+    <ListView
+        android:layout_width="match_parent"
+        android:paddingLeft="5dp"
+        android:paddingRight="5dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        tools:listitem="@layout/item_epc"
+        android:id="@+id/listView_data" />
+
+<!--    <LinearLayout-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="142dp"-->
+<!--        android:layout_margin="10dp"-->
+<!--        android:orientation="horizontal">-->
+
+<!--        <CheckBox-->
+<!--            android:id="@+id/checkBox_multi"-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:checked="false"-->
+<!--            android:text="@string/multi_mode" />-->
+
+<!--    </LinearLayout>-->
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+
+        android:padding="5dp"
+        android:orientation="horizontal">
+        <Button
+            android:id="@+id/button_start"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:background="@drawable/btn_gradient"
+            android:textColor="@color/colorWhite"
+            android:layout_marginRight="10dp"
+            android:drawableLeft="@drawable/ic_scanner_black_24dp"
+            android:drawableTint="@color/colorWhite"
+            android:text="Mulai Scan"/>
+
+        <Button
+            android:id="@+id/button_clear_epc"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:minWidth="100dp"
+            android:textColor="@color/colorWhite"
+            android:background="@drawable/btn_gradient"
+            android:drawableTint="@color/colorWhite"
+            android:drawableLeft="@drawable/ic_sync_black_24dp"
+            android:text="Ulangi"/>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="10dp"
+        android:padding="5dp"
+        android:orientation="horizontal">
+        <Button
+            android:id="@+id/button_simpan"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/colorWhite"
+            android:background="@drawable/btn_gradient"
+            android:layout_weight="1"
+            android:drawableLeft="@drawable/ic_save_black_24dp"
+            android:drawableTint="@color/colorWhite"
+            android:text="@string/simpan"/>
+        <Button
+            android:id="@+id/button_sync"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:visibility="gone"
+            android:text="Sync"/>
+        <Button
+            android:id="@+id/button_remove"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            android:layout_weight="1"
+            android:text="Remove All"/>
+    </LinearLayout>
+
+</LinearLayout >

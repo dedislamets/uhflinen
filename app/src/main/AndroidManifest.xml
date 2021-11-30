@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="id.coba.kotlinpintar">
+
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.READ_SYNC_SETTINGS" />
+    <uses-permission android:name="android.permission.WRITE_SYNC_SETTINGS" />
+    <uses-permission android:name="android.permission.AUTHENTICATE_ACCOUNTS" />
+    <uses-permission android:name ="android.permission.CAMERA"></uses-permission>
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"></uses-permission>
+
+    <application
+        android:name=".MyApplication"
+        android:allowBackup="false"
+        android:icon="@mipmap/ic_launcher_demo"
+        android:label="@string/app_name"
+        android:supportsRtl="true"
+        android:theme="@style/AppTheme"
+        android:usesCleartextTraffic="true">
+        <activity android:name=".halaman_user"></activity>
+        <activity android:name=".halaman_admin" />
+        <activity android:name=".Lihat_Ruangan" />
+        <activity android:name=".CariRoom" />
+        <activity android:name=".CreateRoomActivity" />
+        <activity android:name=".IntentBiasaActivity" />
+        <activity android:name=".ScannerActivity" />
+        <activity android:name=".SearchActivity" />
+        <activity android:name=".DetailActivity" />
+        <activity android:name=".KotorActivity" />
+        <activity android:name=".MultiColumnActivity" />
+        <activity android:name=".CustomizedListView" />
+        <activity android:name=".ListKotorActivity" />
+        <activity android:name=".ListBersihActivity" />
+        <activity android:name=".Activity_Monitor" />
+        <activity android:name=".Activity_Request" />
+        <activity android:name=".Activity_Setting" />
+        <activity android:name=".Activity_Room" />
+        <activity android:name=".InsertRoomActivity" />
+        <activity android:name=".EditRoomActivity" />
+        <activity android:name=".ListRegisterLinen" />
+        <activity android:name=".Activity_Register_Linen" />
+        <activity android:name=".BersihActivity" />
+        <activity android:name=".ListHistoryBersihActivity" />
+        <activity android:name=".ListKeluarActivity" />
+        <activity android:name=".KeluarActivity" />
+        <activity android:name=".ListRusakActivity" />
+        <activity android:name=".ListRequestActivity" />
+        <activity android:name=".CariListRequestActivity" />
+        <activity android:name=".RusakActivity" />
+        <activity android:name=".SetupActivity" />
+        <activity android:name=".FirebaseActivity" />
+        <activity android:name=".ActivityNotification" />
+        <activity android:name=".Activity_Login" />
+        <activity android:name=".Activity_Inspeksi"
+            android:screenOrientation="portrait" />
+        <activity android:name=".Activity_Chooser"
+            android:screenOrientation="portrait" />
+        <activity android:name=".Activity_Webview" />
+        <activity
+            android:name=".MainActivity"
+            android:launchMode="singleTop"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".UhfActivity"
+            android:label="@string/title_activity_uhf"
+            android:theme="@style/AppTheme.NoActionBar" />
+        <activity
+            android:name=".SplashActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/SplashScreenStyle">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="OPEN_ACTIVITY_1" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+
+        <receiver android:name=".NetworkStateChecker">
+            <intent-filter>
+                <action android:name="android.net.conn.CONNECTIVITY_CHANGE" />
+            </intent-filter>
+        </receiver>
+        <receiver android:name=".BroadcastReceiver.Notifikasi">
+            <intent-filter>
+                <action android:name="broadcast_notify"/>
+            </intent-filter>
+        </receiver>
+
+        <provider
+            android:name=".Sync.MyContentProvider"
+            android:authorities="@string/content_authority"
+            android:exported="false"
+            android:syncable="true" />
+
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_icon"
+            android:resource="@mipmap/ic_launcher" />
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_color"
+            android:resource="@color/colorAccent" />
+        <service android:name=".NotificationService"
+            android:exported="false"
+            android:directBootAware="true">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT"/>
+            </intent-filter>
+        </service>
+        <service android:name=".MyFirebaseMessagingService"
+            android:exported="false"
+            android:directBootAware="true">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
+
+<!--        <service android:name=".MyFirebaseInstanceIDService">-->
+<!--            <intent-filter>-->
+<!--                <action android:name="com.google.firebase.INSTANCE_ID_EVENT"/>-->
+<!--            </intent-filter>-->
+<!--        </service>-->
+
+        <service android:name=".Sync.MyAuthenticatorService">
+            <intent-filter>
+                <action android:name="android.accounts.AccountAuthenticator" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.accounts.AccountAuthenticator"
+                android:resource="@xml/authenticator" />
+        </service> <!-- The SyncAdapter service -->
+        <service
+            android:name=".Sync.MyServiceSync"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.content.SyncAdapter" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.content.SyncAdapter"
+                android:resource="@xml/syncadapter" />
+        </service>
+    </application>
+
+</manifest>

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context=".CariRoom">
+    <androidx.appcompat.widget.Toolbar
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+            <EditText
+                android:layout_weight="1"
+                android:id="@+id/cari_room"
+                android:drawableLeft="@drawable/ic_search_black_24dp"
+                android:background="@drawable/search_icon_background"
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:paddingLeft="20dp"
+                android:hint="Cari Ruangan"/>
+            <Button
+                android:id="@+id/reset"
+                android:background="@drawable/ic_close_black_24dp"
+                android:layout_marginLeft="-40dp"
+                android:layout_width="20dp"
+                android:layout_height="20dp"/>
+            <Button
+                android:id="@+id/keluar"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Batal"
+                android:background="#00FFFFFF"/>
+        </LinearLayout>
+    </androidx.appcompat.widget.Toolbar>
+    <ListView
+        android:id="@+id/list_cari"
+        android:layout_width="match_parent"
+        android:padding="10dp"
+
+        tools:listitem="@layout/adapter_note_cari"
+        android:dividerHeight="10dp"
+        android:divider="@android:color/transparent"
+        android:layout_height="match_parent"></ListView>
+</LinearLayout>

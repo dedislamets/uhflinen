@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:background="@layout/list_selector"
+    android:orientation="horizontal"
+    android:descendantFocusability="blocksDescendants"
+    android:padding="15dp" >
+
+
+    <LinearLayout android:id="@+id/thumbnail"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:padding="3dip"
+        android:layout_alignParentLeft="true"
+        android:visibility="gone"
+
+        android:layout_marginRight="5dip">
+        <Button
+            android:id="@+id/btnHapus"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:drawableLeft="@drawable/ic_delete_black_24dp"
+            android:drawableTint="@color/colorRed"
+            android:layout_marginRight="10dp"
+            android:text="Del" />
+
+
+    </LinearLayout>
+
+    <!-- Title Of Song-->
+    <TextView
+        android:id="@+id/title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignTop="@id/thumbnail"
+        android:layout_toRightOf="@+id/thumbnail"
+        android:text="No Transaksi"
+        android:textColor="#040404"
+        android:textSize="15dip"
+        android:textStyle="bold"
+        android:typeface="sans" />
+
+    <!-- Artist Name -->
+    <TextView
+        android:id="@+id/artist"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/title"
+        android:layout_marginTop="1dip"
+        android:layout_toRightOf="@id/thumbnail"
+        android:text="PIC"
+        android:textColor="#343434"
+        android:textSize="18sp" />
+    <ImageView android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/imgOK"
+        android:layout_marginLeft="10dp"
+        android:src="@drawable/ic_done_all_black_24dp"
+        android:visibility="gone"
+        android:layout_toRightOf="@id/artist"
+        android:layout_below="@id/title"/>
+    <ImageView android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/imgRusak"
+        android:layout_marginLeft="10dp"
+        android:src="@drawable/ic_error"
+        android:visibility="gone"
+        android:layout_toRightOf="@id/imgOK"
+        android:layout_below="@id/title"/>
+    <ImageView android:layout_width="wrap_content"
+        android:id="@+id/imgAdd"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="10dp"
+        android:visibility="gone"
+        android:src="@drawable/ic_library_add"
+        android:layout_toRightOf="@id/imgRusak"
+        android:layout_below="@id/title"/>
+    <TextView
+        android:id="@+id/status_sync"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/artist"
+        android:layout_marginTop="1dip"
+        android:layout_toRightOf="@id/thumbnail"
+        android:text="Not Sync"
+        android:textColor="@color/colorRed"
+        android:textSize="13dip"
+        android:typeface="sans" />
+    <!-- Rightend Duration -->
+    <TextView
+        android:id="@+id/duration"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignTop="@id/title"
+        android:layout_alignParentRight="true"
+        android:layout_marginRight="5dip"
+        android:gravity="right"
+        android:text="5:45"
+        android:textColor="#10bcc9"
+        android:textSize="14sp"
+        android:textStyle="bold" />
+
+    <!-- Rightend Arrow -->
+    <ImageView android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/ic_keyboard_arrow_right"
+        android:layout_alignParentRight="true"
+        android:layout_centerVertical="true"/>
+
+</RelativeLayout>

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:orientation="horizontal">
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:layout_margin="5dp"
+        android:text="No"
+        android:id="@+id/textView_id" />
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:text="EPC"
+        android:layout_weight="1"
+        android:layout_margin="5dp"
+        android:width="100dp"
+        android:id="@+id/textView_epc" />
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:text="Status EPC"
+
+        android:layout_margin="5dp"
+        android:width="150dp"
+        android:id="@+id/status_epc" />
+
+</LinearLayout>

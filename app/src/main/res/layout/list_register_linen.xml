@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="vertical">
+<!--    <include-->
+<!--        android:id="@+id/header"-->
+<!--        layout="@layout/header_main"-->
+<!--        />-->
+<!--    >-->
+    <Button
+        android:id="@+id/btnCari"
+        android:drawableLeft="@drawable/ic_search_black_24dp"
+        android:padding="20dp"
+        android:layout_marginLeft="15dp"
+        android:layout_marginRight="15dp"
+        android:layout_width="match_parent"
+        android:background="@drawable/search_icon_background"
+        android:text="Cari"
+        android:textColor="@color/colorTrendingStop"
+        android:gravity="center_horizontal"
+        android:layout_marginTop="10dp"
+        android:layout_height="45dp" />
+    <androidx.recyclerview.widget.RecyclerView
+
+        android:id="@+id/list_note"
+        android:layout_width="match_parent"
+        tools:listitem="@layout/adapter_reg_linen"
+        tools:itemCount="5"
+        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+        android:layout_marginTop="10dp"
+        android:padding="10dp"
+        android:layout_below="@id/btnCari"
+        android:layout_above="@id/btnBar"
+        android:layout_height="wrap_content"/>
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_centerVertical="true"
+        android:layout_centerHorizontal="true"
+        android:background="@drawable/white_rectangle_background"
+        app:backgroundTint="@color/colorWhite"
+        android:tint="@color/colorDivider"
+        android:layout_gravity="center"
+        android:layout_marginStart="10dp"
+        android:id="@+id/fab_create"
+        android:layout_marginLeft="10dp"
+        android:layout_marginTop="-65dp"
+        android:layout_marginBottom="65dp"
+        android:backgroundTint="@color/colorTrendingStop"
+        android:src="@drawable/ic_edit_black_24dp" />
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/btnBar"
+        android:layout_alignParentBottom="true"
+        >
+        <com.google.android.material.bottomnavigation.BottomNavigationView
+            android:id="@+id/bottomNavigationView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:backgroundTint="@color/colorWhite"
+            android:foregroundTint="#009C4747"
+            app:backgroundTint="#00292323"
+            app:itemBackground="@color/colorBackground"
+            app:itemIconSize="30dp"
+            app:labelVisibilityMode="labeled"
+            app:menu="@menu/navigation_menu" />
+    </RelativeLayout>
+
+
+</RelativeLayout>
