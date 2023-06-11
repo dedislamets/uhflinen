@@ -150,20 +150,20 @@ class Activity_Register_Linen : AppCompatActivity(), View.OnClickListener {
             e.printStackTrace()
         }
 
-        if (mUhfrManager != null) {//close uhf module
-            mUhfrManager.close()
+        //if (mUhfrManager != null) {//close uhf module
+        //    mUhfrManager.close()
 //            mUhfrManager = null
-        }
+       //}
     }
 
     override fun onDestroy() {
         // TODO Auto-generated method stub
         super.onDestroy()
         //        Log.e("main","destroy");
-        if (mUhfrManager != null) {//close uhf module
-            mUhfrManager.close()
+        //if (mUhfrManager != null) {//close uhf module
+          //  mUhfrManager.close()
 //            mUhfrManager = null
-        }
+        //}
     }
 
     override fun onOptionsItemSelected(item: MenuItem):Boolean {

@@ -5,6 +5,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Locale;
 
 import android.app.Activity;
 import android.content.Context;
@@ -62,7 +63,7 @@ public class KeluarAdapter extends BaseAdapter {
         artist.setText(song.get(CustomizedListView.KEY_ARTIST));
 //        duration.setText(song.get(CustomizedListView.KEY_DURATION));
 
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ENGLISH);
         try {
             Date d = sdf.parse(song.get(CustomizedListView.KEY_DURATION));
             sdf.applyPattern("d MMM yyyy, hh:mm");

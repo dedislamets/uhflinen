@@ -19,6 +19,7 @@ import org.json.JSONObject;
 import java.util.HashMap;
 import java.util.Map;
 
+import static id.coba.kotlinpintar.InputDbHelper.JENIS_INFEKSIUS;
 import static id.coba.kotlinpintar.InputDbHelper.KATEGORI;
 import static id.coba.kotlinpintar.InputDbHelper.TOTAL_BERAT;
 import static id.coba.kotlinpintar.InputDbHelper.TOTAL_QTY;
@@ -56,6 +57,7 @@ public class NetworkStateChecker extends BroadcastReceiver {
                                 cursor.getString(cursor.getColumnIndex(InputContract.TaskEntry.PIC)),
                                 cursor.getString(cursor.getColumnIndex(InputContract.TaskEntry.STATUS)),
                                 cursor.getString(cursor.getColumnIndex(KATEGORI)),
+                                cursor.getString(cursor.getColumnIndex(JENIS_INFEKSIUS)),
                                 cursor.getString(cursor.getColumnIndex(TOTAL_BERAT)),
                                 cursor.getString(cursor.getColumnIndex(TOTAL_QTY))
                         );
@@ -85,7 +87,9 @@ public class NetworkStateChecker extends BroadcastReceiver {
      * if the name is successfully sent
      * we will update the status as synced in SQLite
      * */
-    private void saveHeader(final Integer id,final String no_transaksi, final String tanggal, final String pic, final String status, final String kategori, final String total_berat, final String total_qty) {
+    private void saveHeader(final Integer id,final String no_transaksi, final String tanggal, final String pic,
+                            final String status, final String kategori, final String infeksius, final String total_berat,
+                            final String total_qty) {
         StringRequest stringRequest = new StringRequest(Request.Method.POST, BASE_URL+ "linen_kotor",
                 new Response.Listener<String>() {
                     @Override
@@ -117,7 +121,8 @@ public class NetworkStateChecker extends BroadcastReceiver {
                 params.put("tanggal", tanggal);
                 params.put("pic", pic);
                 params.put("status", status);
-                params.put("kategori", "");
+                params.put("kategori", kategori);
+                params.put("infeksius", infeksius);
                 params.put("total_berat", total_berat);
                 params.put("total_qty", total_qty);
                 return params;

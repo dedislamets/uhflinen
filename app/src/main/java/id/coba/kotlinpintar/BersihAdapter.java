@@ -15,6 +15,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Locale;
 
 public class BersihAdapter extends BaseAdapter {
 
@@ -57,7 +58,7 @@ public class BersihAdapter extends BaseAdapter {
         HashMap<String, String> song = new HashMap<String, String>();
         song = data.get(position);
 
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ENGLISH);
         try {
             Date d = sdf.parse(song.get(CustomizedListView.KEY_DURATION));
             sdf.applyPattern("d MMM yyyy, hh:mm");

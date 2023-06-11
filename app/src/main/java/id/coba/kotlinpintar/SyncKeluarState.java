@@ -109,7 +109,7 @@ public class SyncKeluarState extends BroadcastReceiver {
                 params.put("no_transaksi", no_transaksi);
                 params.put("tanggal", tanggal);
                 params.put("pic", pic);
-                params.put("status", status);
+                params.put("status", "KIRIM");
                 params.put("ruangan", nama_ruangan);
                 params.put("no_referensi", no_referensi);
                 return params;

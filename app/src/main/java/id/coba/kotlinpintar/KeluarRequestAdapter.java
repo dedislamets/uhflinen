@@ -25,6 +25,7 @@ public class KeluarRequestAdapter extends BaseAdapter {
     //    private List<EpcDataModel> list ;
     public ArrayList<HashMap> list;
     public ArrayList<HashMap> list_request;
+    private HashMap mapEpc;
 //    private ArrayList<HashMap<String, String>> list;
     Activity activity;
 
@@ -74,16 +75,18 @@ public class KeluarRequestAdapter extends BaseAdapter {
                 holder.tvJenis.setText("" + map.get("jenis"));
                 holder.tvQty.setText("" + map.get("qty"));
                 holder.tvReady.setText("" + map.get("ready"));
-                int qty = 0;
-                if(map.get("ready") != null){
-                    qty = Integer.parseInt( map.get("ready").toString());
-                }
-                for (HashMap map_request : list_request) {
-                    if (map.get("jenis").equals(map_request.get("item"))) {
-                        qty++;
-                        holder.tvReady.setText( String.valueOf(qty) );
-                    }
-                }
+//                int qty = 0;
+//                if(map.get("ready") != null){
+//                    qty = Integer.parseInt( map.get("ready").toString());
+//                }
+//                int x =0;
+//                for (HashMap map_request : list_request) {
+//                    if (map.get("jenis").equals(map_request.get("item"))) {
+//                        qty++;
+//                        holder.tvReady.setText( String.valueOf(qty) );
+//                        list_request.get(x).put("ready", qty);
+//                    }
+//                }
             }
 
 

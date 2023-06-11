@@ -12,9 +12,6 @@ import android.view.MenuItem
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
-import com.android.volley.Request
-import com.android.volley.RequestQueue
-import com.android.volley.Response
 import com.android.volley.toolbox.StringRequest
 import com.android.volley.toolbox.Volley
 import com.google.android.material.bottomnavigation.BottomNavigationView
@@ -29,8 +26,14 @@ import androidx.core.app.ComponentActivity.ExtraData
 import androidx.core.content.ContextCompat.getSystemService
 import android.icu.lang.UCharacter.GraphemeClusterBreak.T
 import android.os.Handler
+import android.os.Looper
 import android.os.Message
+import android.util.Log
+import com.android.volley.*
+import id.coba.kotlinpintar.Rest.ApiClient
 import kotlinx.android.synthetic.main.activity_lihat__ruangan.*
+import org.json.JSONException
+import java.util.HashMap
 
 
 class Activity_Setting : AppCompatActivity() {
@@ -45,6 +48,7 @@ class Activity_Setting : AppCompatActivity() {
     private lateinit var progressBar: ProgressBar
     private lateinit var persentase: TextView
     private var Value: Int = 0
+    var sisa: Int = 0
     var handler: Handler? = null
     var isStarted = false
     var primaryProgressStatus = 0
@@ -57,6 +61,7 @@ class Activity_Setting : AppCompatActivity() {
         setContentView(R.layout.fragment_setup)
 
         pref = getSharedPreferences("LOGIN", Context.MODE_PRIVATE)
+
         if(!isLogin()){
             val intentBiasa1 = Intent(applicationContext, Activity_Login::class.java)
             startActivity(intentBiasa1)
@@ -99,15 +104,18 @@ class Activity_Setting : AppCompatActivity() {
         listMenu = ArrayList()
 
         listMenu.add(MenuModel("Master"))
-        listMenu.add(MenuModel("Ruangan", "test", R.drawable.ic_room))
-        listMenu.add(MenuModel("Barang", "test", R.drawable.ic_scanner_black_24dp))
-        listMenu.add(MenuModel("Base API", "test", R.drawable.ic_settings))
-        listMenu.add(MenuModel("Firebase Token", "test", R.drawable.ic_whatshot_black_24dp))
+        listMenu.add(MenuModel("Ruangan", "test", R.drawable.ic_room, null))
+        listMenu.add(MenuModel("Barang", "test", R.drawable.ic_scanner_black_24dp, null))
+        listMenu.add(MenuModel("Base API", "test", R.drawable.ic_settings, null))
+//        listMenu.add(MenuModel("Firebase Token", "test", R.drawable.ic_whatshot_black_24dp))
+        listMenu.add(MenuModel("Reset Notifikasi", "test", R.drawable.ic_whatshot_black_24dp, null))
         listMenu.add(MenuModel("Pengaturan"))
-        listMenu.add(MenuModel("Sync Tabel", "test", R.drawable.ic_sync_black_24dp))
-        listMenu.add(MenuModel("Reset Data Transaksi", "test", R.drawable.ic_delete_black_24dp))
-        listMenu.add(MenuModel("Alter Tabel", "test", R.drawable.ic_edit))
-        listMenu.add(MenuModel("Logout", "test", R.drawable.ic_exit_to_app_black_24dp))
+        listMenu.add(MenuModel("Sync Tabel", "test", R.drawable.ic_sync_black_24dp, null))
+        listMenu.add(MenuModel("Sync Barang", "test", R.drawable.ic_sync_black_24dp, null))
+        listMenu.add(MenuModel("Reset Data", "test", R.drawable.ic_delete_black_24dp, null))
+        listMenu.add(MenuModel("Alter Tabel", "test", R.drawable.ic_edit, null))
+        listMenu.add(MenuModel("Mode Handheld", "test", R.drawable.ic_edit, false))
+        listMenu.add(MenuModel("Logout", "test", R.drawable.ic_exit_to_app_black_24dp, null))
 
 
         menuAdapter = MenuAdapter(listMenu, getApplicationContext())
@@ -128,64 +136,55 @@ class Activity_Setting : AppCompatActivity() {
                 }else if (dataModel.title == "Firebase Token"){
                     val intentBiasa = Intent(this, FirebaseActivity::class.java)
                     startActivity(intentBiasa)
+                }else if (dataModel.title == "Reset Notifikasi"){
+                    val db = mHelper.getWritableDatabase()
+                    db.delete(TABLE_NOTIFIKASI,
+                        null,
+                        null)
+                    Toast.makeText(this,"Notifikasi sudah di reset", Toast.LENGTH_SHORT).show()
+                    db.close()
                 }else if (dataModel.title == "Base API"){
                     val intentBiasa = Intent(this, SetupActivity::class.java)
                     startActivity(intentBiasa)
                 }else if (dataModel.title == "Logout"){
                     pref.edit().remove("isLogin").commit()
+                    deleteToken(pref.getInt(ID_USER, 0))
                     val intentBiasa = Intent(this, Activity_Login::class.java)
                     startActivity(intentBiasa)
-                }else if (dataModel.title == "Reset Data Transaksi"){
+                }else if (dataModel.title == "Reset Data"){
                     val db = mHelper.getWritableDatabase()
-                    db.delete(InputContract.TaskEntry.TABLE,
-                        null,
-                        null)
-
-                    db.delete(InputContract.TaskEntry.TABLE_DETAIL,
-                        null,
-                        null)
-
-                    db.delete(TABLE_BERSIH,
-                        null,
-                        null)
-
-                    db.delete(TABLE_BERSIH_DETAIL,
-                        null,
-                        null)
-
-                    db.delete(TABLE_KELUAR,
-                        null,
-                        null)
-
-                    db.delete(TABLE_KELUAR_DETAIL,
-                        null,
-                        null)
-
-                    db.delete(TABLE_RUSAK,
-                        null,
-                        null)
-
-                    db.delete(TABLE_RUSAK_DETAIL,
-                        null,
-                        null)
-
-                    db.delete(TABLE_REQUEST,
-                        null,
-                        null)
-
-                    db.delete(TABLE_REQUEST_DETAIL,
-                        null,
-                        null)
-                    db.delete(TABLE_NOTIFIKASI,
-                        null,
-                        null)
-                    Toast.makeText(this,"Reset Tabel Semua Linen Sukses", Toast.LENGTH_SHORT).show()
+                    db.delete(TABLE_BARANG, null, null)
+                    db.delete(TABLE_RUANGAN, null, null)
+                    db.delete(TABLE_DEFECT, null, null)
+                    db.delete(InputContract.TaskEntry.TABLE, null, null)
+                    db.delete(InputContract.TaskEntry.TABLE_DETAIL, null, null)
+                    db.delete(TABLE_BERSIH, null, null)
+                    db.delete(TABLE_BERSIH_DETAIL, null, null)
+                    db.delete(TABLE_KELUAR, null, null)
+                    db.delete(TABLE_KELUAR_DETAIL, null, null)
+                    db.delete(TABLE_RUSAK, null, null)
+                    db.delete(TABLE_RUSAK_DETAIL, null, null)
+                    db.delete(TABLE_REQUEST, null, null)
+                    db.delete(TABLE_REQUEST_DETAIL, null, null)
+                    db.delete(TABLE_NOTIFIKASI, null, null)
+                    Toast.makeText(this,"Reset Tabel Sukses", Toast.LENGTH_SHORT).show()
                     db.close()
                 }else if (dataModel.title == "Alter Tabel"){
                     val db = InputDbHelper(this)
                     db.alterTabel()
-
-                    Toast.makeText(this,"Alter Tabel Linen Bersih", Toast.LENGTH_SHORT).show()
+                    db.createLinenKotor()
+//
+//                    Toast.makeText(this,"Alter Tabel Linen Bersih", Toast.LENGTH_SHORT).show()
+                }else if (dataModel.title == "Sync Barang"){
+                    val db = mHelper.getWritableDatabase()
+                    db.delete(TABLE_BARANG, null, null)
+                    syncLinen(1)
+                }else if (dataModel.title == "Sync Ruangan"){
+                    val db = mHelper.getWritableDatabase()
+                    db.delete(TABLE_RUANGAN, null, null)
+                    syncRuangan()
+                }else if (dataModel.title == "Mode Handheld"){
+                    Toast.makeText(this,"Handheld", Toast.LENGTH_SHORT).show()
                 }else if (dataModel.title == "Sync Tabel"){
                     isStarted = true
                     Thread(Runnable {
@@ -199,26 +198,30 @@ class Activity_Setting : AppCompatActivity() {
                                     db.createLinen()
                                     db.createJenisBarang()
                                     db.createPIC()
+                                    db.createLinenKotor()
                                     db.createLinenBersih()
                                     db.createKategori()
+                                    db.createInfeksius()
                                     db.createLinenKeluar()
                                     db.createLinenRusak()
                                     db.createLinenRequest()
                                     db.createDefect()
                                     db.createNotifikasi()
                                     db.createLogin()
+                                }else if(primaryProgressStatus == 20) {
+                                    syncInfeksius()
                                 }else if(primaryProgressStatus == 30) {
                                     syncRuangan()
                                 }else if(primaryProgressStatus == 35) {
-                                    syncNotifikasi()
+                                    syncKategori()
                                 }else if(primaryProgressStatus == 40) {
-                                    syncLinen()
+
                                 }else if(primaryProgressStatus == 50) {
                                     syncJenisBarang()
                                 }else if(primaryProgressStatus == 60) {
                                     syncPIC()
                                 }else if(primaryProgressStatus == 65) {
-                                    syncKategori()
+                                    syncNotifikasi()
                                 }else if(primaryProgressStatus == 70) {
                                     syncDefect()
                                 }else if(primaryProgressStatus == 75) {
@@ -235,7 +238,8 @@ class Activity_Setting : AppCompatActivity() {
                                 progressBar.setProgress(primaryProgressStatus) // Memasukan Value pada ProgressBar
 
                                 if (primaryProgressStatus == 100) {
-                                    persentase.text = "All tasks completed"
+                                    syncLinen(1)
+                                    runOnUiThread { persentase.text = "All tasks completed" }
                                     isStarted = false
                                 }else{
                                     // Mengirim pesan dari handler, untuk diproses didalam thread
@@ -260,6 +264,29 @@ class Activity_Setting : AppCompatActivity() {
         getSupportActionBar()?.setTitle("Menu Master")
 
     }
+    private fun deleteToken(id_user: Int) {
+        val stringRequest: StringRequest = object : StringRequest(
+            Method.POST, BASE_URL + "hapus_token",
+            Response.Listener { response ->
+                try {
+                    val obj = JSONObject(response)
+                    if (!obj.getBoolean("error")) {
+                    }
+                } catch (e: JSONException) {
+                    e.printStackTrace()
+                }
+            },
+            Response.ErrorListener { }) {
+            @Throws(AuthFailureError::class)
+            override fun getParams(): Map<String, String>? {
+                val params: MutableMap<String, String> = HashMap()
+                params[ID_USER] = id_user.toString()
+                return params
+            }
+        }
+        VolleySingleton.getInstance(applicationContext)
+            .addToRequestQueue(stringRequest)
+    }
 
     private fun isLogin(): Boolean {
         return pref.getBoolean("isLogin", false)
@@ -269,9 +296,10 @@ class Activity_Setting : AppCompatActivity() {
             Response.Listener<String> { response ->
                 var jsonObject: JSONObject = JSONObject(response)
                 var status_kirim : String = jsonObject.getString("status")
-                var jsonArray: JSONArray = jsonObject.getJSONArray("data")
-                var jsonArray_detail: JSONArray = jsonObject.getJSONArray("data_detail")
+
                 if (status_kirim.equals("true")){
+                    var jsonArray: JSONArray = jsonObject.getJSONArray("data")
+                    var jsonArray_detail: JSONArray = jsonObject.getJSONArray("data_detail")
                     val db = mHelper.getWritableDatabase()
                     var cursor_del : Cursor = mHelper.deleteKotorAll()
                     cursor_del.moveToFirst()
@@ -282,6 +310,7 @@ class Activity_Setting : AppCompatActivity() {
                         var tgl : String = item.getString("TANGGAL")
                         var pic : String = item.getString("PIC")
                         var kategori : String = item.getString("KATEGORI")
+                        var infeksius : String = item.getString("F_INFEKSIUS")
                         var qty : String = item.getString("TOTAL_QTY")
                         var berat : String = item.getString("TOTAL_BERAT")
                         var status : String = item.getString("STATUS")
@@ -295,6 +324,7 @@ class Activity_Setting : AppCompatActivity() {
                             values_header.put(InputContract.TaskEntry.TANGGAL,   tgl)
                             values_header.put(InputContract.TaskEntry.PIC,   pic)
                             values_header.put(KATEGORI,   kategori)
+                            values_header.put(JENIS_INFEKSIUS,   infeksius)
                             values_header.put(TOTAL_QTY,   qty)
                             values_header.put(TOTAL_BERAT,   berat)
                             values_header.put(InputContract.TaskEntry.STATUS,   status)
@@ -348,9 +378,10 @@ class Activity_Setting : AppCompatActivity() {
             Response.Listener<String> { response ->
                 var jsonObject: JSONObject = JSONObject(response)
                 var status_kirim : String = jsonObject.getString("status")
-                var jsonArray: JSONArray = jsonObject.getJSONArray("data")
-                var jsonArray_detail: JSONArray = jsonObject.getJSONArray("data_detail")
+
                 if (status_kirim.equals("true")){
+                    var jsonArray: JSONArray = jsonObject.getJSONArray("data")
+                    var jsonArray_detail: JSONArray = jsonObject.getJSONArray("data_detail")
                     val db = mHelper.getWritableDatabase()
                     var cursor_del : Cursor = mHelper.deleteBersihAll()
                     cursor_del.moveToFirst()
@@ -432,9 +463,10 @@ class Activity_Setting : AppCompatActivity() {
             Response.Listener<String> { response ->
                 var jsonObject: JSONObject = JSONObject(response)
                 var status_kirim : String = jsonObject.getString("status")
-                var jsonArray: JSONArray = jsonObject.getJSONArray("data")
-                var jsonArray_detail: JSONArray = jsonObject.getJSONArray("data_detail")
+
                 if (status_kirim.equals("true")){
+                    var jsonArray: JSONArray = jsonObject.getJSONArray("data")
+                    var jsonArray_detail: JSONArray = jsonObject.getJSONArray("data_detail")
                     val db = mHelper.getWritableDatabase()
                     var cursor_del : Cursor = mHelper.deleteRusakAll()
                     cursor_del.moveToFirst()
@@ -511,9 +543,10 @@ class Activity_Setting : AppCompatActivity() {
             Response.Listener<String> { response ->
                 var jsonObject: JSONObject = JSONObject(response)
                 var status_kirim : String = jsonObject.getString("status")
-                var jsonArray: JSONArray = jsonObject.getJSONArray("data")
-                var jsonArray_detail: JSONArray = jsonObject.getJSONArray("data_detail")
+
                 if (status_kirim.equals("true")){
+                    var jsonArray: JSONArray = jsonObject.getJSONArray("data")
+                    var jsonArray_detail: JSONArray = jsonObject.getJSONArray("data_detail")
                     val db = mHelper.getWritableDatabase()
 
                     var cursor_del : Cursor = mHelper.deleteKeluarAll()
@@ -591,9 +624,10 @@ class Activity_Setting : AppCompatActivity() {
             Response.Listener<String> { response ->
                 var jsonObject: JSONObject = JSONObject(response)
                 var status_kirim : String = jsonObject.getString("status")
-                var jsonArray: JSONArray = jsonObject.getJSONArray("data")
-                var jsonArray_detail: JSONArray = jsonObject.getJSONArray("data_detail")
+
                 if (status_kirim.equals("true")){
+                    var jsonArray: JSONArray = jsonObject.getJSONArray("data")
+                    var jsonArray_detail: JSONArray = jsonObject.getJSONArray("data_detail")
                     val db = mHelper.getWritableDatabase()
 
                     var cursor_del : Cursor = mHelper.deleteRequestAll()
@@ -670,8 +704,9 @@ class Activity_Setting : AppCompatActivity() {
             Response.Listener<String> { response ->
                 var jsonObject: JSONObject = JSONObject(response)
                 var status_kirim : String = jsonObject.getString("status")
-                var jsonArray: JSONArray  = jsonObject.getJSONArray("data")
+
                 if (status_kirim.equals("true")){
+                    var jsonArray: JSONArray  = jsonObject.getJSONArray("data")
                     for (i in 0 until jsonArray.length()) {
                         val item = jsonArray.getJSONObject(i)
                         var id_ruangan :Int = item.getInt("id")
@@ -733,36 +768,50 @@ class Activity_Setting : AppCompatActivity() {
         requestQueue.add(stringReq)
     }
 
-    private fun syncLinen(){
-        val stringReq = StringRequest(Request.Method.GET, BASE_URL +"barang",
+    private fun syncLinen(page: Int){
+
+        val stringReq = StringRequest(Request.Method.GET, BASE_URL +"barang?page="+ page,
             Response.Listener<String> { response ->
                 var jsonObject: JSONObject = JSONObject(response)
                 var status_kirim : String = jsonObject.getString("status")
-                var jsonArray: JSONArray  = jsonObject.getJSONArray("data")
+
                 if (status_kirim.equals("true")){
-                    for (i in 0 until jsonArray.length()) {
-                        val item = jsonArray.getJSONObject(i)
-                        var serial :String = item.getString("serial")
-                        var tanggal :String = item.getString("tanggal_register")
-                        var nama_ruangan : String = item.getString("nama_ruangan")
-                        var id_jenis : String = item.getString("id_jenis")
+                    val itm = jsonObject.getJSONObject("data")
+                    var jsonArrayProduct: JSONArray  = jsonObject.getJSONObject("data").getJSONArray("products")
+                    for (i in 0 until jsonArrayProduct.length()) {
+                        val item = jsonArrayProduct.getJSONObject(i)
+                        var serial: String = item.getString("serial")
+                        var tanggal: String = item.getString("tanggal_register")
+                        var nama_ruangan: String = item.getString("nama_ruangan")
+                        var id_jenis: String = item.getString("id_jenis")
 
                         val db = mHelper.getWritableDatabase()
-                        val values_header  = ContentValues()
+                        val values_header = ContentValues()
 
-                        values_header.put(InputDbHelper.SERIAL,   serial)
-                        values_header.put(InputDbHelper.NAMA_RUANGAN,   nama_ruangan)
-                        values_header.put(InputDbHelper.TANGGAL,   tanggal)
-                        values_header.put(InputDbHelper.ID_JENIS,   id_jenis)
+                        values_header.put(InputDbHelper.SERIAL, serial)
+                        values_header.put(InputDbHelper.NAMA_RUANGAN, nama_ruangan)
+                        values_header.put(InputDbHelper.TANGGAL, tanggal)
+                        values_header.put(InputDbHelper.ID_JENIS, id_jenis)
+//                        db.delete(TABLE_BARANG,"serial = ?", arrayOf(serial))
+                        db.insertWithOnConflict(
+                            TABLE_BARANG,
+                            null,
+                            values_header,
+                            SQLiteDatabase.CONFLICT_REPLACE
+                        );
 
-                        db.insertWithOnConflict(TABLE_BARANG, null, values_header, SQLiteDatabase.CONFLICT_REPLACE);
                     }
-                    Toast.makeText(this,"Sync Tabel Linen Sukses", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this,"Sync Tabel Linen Page " + itm.getString("page") + " Sukses", Toast.LENGTH_SHORT).show()
+                    if(itm.getInt("sisa") > 0){
+                        syncLinen(page+1)
+                    }
                 }
             },
             Response.ErrorListener { Toast.makeText(this, "Something wrong", Toast.LENGTH_SHORT).show() })
         val requestQueue = Volley.newRequestQueue(this)
         requestQueue.add(stringReq)
+
+
     }
 
     private fun syncJenisBarang(){
@@ -878,6 +927,34 @@ class Activity_Setting : AppCompatActivity() {
                         db.insertWithOnConflict(TABLE_KATEGORI, null, values_header, SQLiteDatabase.CONFLICT_REPLACE)
                     }
                     Toast.makeText(this,"Sync Tabel Kategori Sukses", Toast.LENGTH_SHORT).show()
+                }
+            },
+            Response.ErrorListener { Toast.makeText(this, "Something wrong", Toast.LENGTH_SHORT).show() })
+        val requestQueue = Volley.newRequestQueue(this)
+        requestQueue.add(stringReq)
+    }
+
+    private fun syncInfeksius(){
+        val stringReq = StringRequest(Request.Method.GET, BASE_URL +"infeksius",
+            Response.Listener<String> { response ->
+                var jsonObject: JSONObject = JSONObject(response)
+                var status_kirim : String = jsonObject.getString("status")
+                var jsonArray: JSONArray  = jsonObject.getJSONArray("data")
+                if (status_kirim.equals("true")){
+                    for (i in 0 until jsonArray.length()) {
+                        val item = jsonArray.getJSONObject(i)
+                        var id_infeksius : String = item.getString("id")
+                        var infeksius :String = item.getString("infeksius")
+
+                        val db = mHelper.getWritableDatabase()
+                        val values_header  = ContentValues()
+
+                        values_header.put(ID_INFEKSIUS,   id_infeksius)
+                        values_header.put(NAMA_INFEKSIUS,   infeksius)
+
+                        db.insertWithOnConflict(TABLE_INFEKSIUS, null, values_header, SQLiteDatabase.CONFLICT_REPLACE)
+                    }
+                    Toast.makeText(this,"Sync Tabel Infeksius Sukses", Toast.LENGTH_SHORT).show()
                 }
             },
             Response.ErrorListener { Toast.makeText(this, "Something wrong", Toast.LENGTH_SHORT).show() })

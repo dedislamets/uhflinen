@@ -6,6 +6,7 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Color;
@@ -27,6 +28,7 @@ import android.widget.CompoundButton;
 import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.DatePicker;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -82,6 +84,8 @@ public class Fragment_Register_Linen extends Fragment implements OnCheckedChange
     private EditText tgl;
     private CheckBox checkMulti ;
     private ArrayList<HashMap> listEpc;
+    private EditText txtScan;
+    private LinearLayout lscan;
 
     private Set<String> epcSet = null ; //store different EPC
 //    private List<HashMap> listEpc = null;//EPC list
@@ -101,6 +105,7 @@ public class Fragment_Register_Linen extends Fragment implements OnCheckedChange
     public Spinner id_jenis;
     private SimpleCursorAdapter adapterRuangan ;
     private SimpleCursorAdapter adapterJenis ;
+    private SharedPreferences prefMode;
 
     private Handler handler = new Handler(){
         @Override
@@ -136,7 +141,7 @@ public class Fragment_Register_Linen extends Fragment implements OnCheckedChange
                         Util.play(1, 0);
                         Activity_Register_Linen.mSetEpcs=epcSet;
                     }else{
-                        if (epcSet.contains(epc)) {//set already exit
+                        if (epcSet.contains(epc.replace("\n",""))) {//set already exit
 //                            position = mapEpc.get(epc);
 //                            EpcDataModel epcOld = listEpc.get(position);
 //                            listEpc.set(position, epcOld);
@@ -162,7 +167,7 @@ public class Fragment_Register_Linen extends Fragment implements OnCheckedChange
 
                         tvTagSum.setText("" + listEpc.size());
                         adapter.notifyDataSetChanged();
-
+                        txtScan.setText("");
                     }
 
                     break ;
@@ -174,6 +179,7 @@ public class Fragment_Register_Linen extends Fragment implements OnCheckedChange
                              @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         // TODO Auto-generated method stub
         Log.e("f1","create view");
+        prefMode = getContext().getSharedPreferences("MODE", Context.MODE_PRIVATE);
         view= inflater.inflate(R.layout.insert_master_barang, null);
         initView();
 
@@ -199,6 +205,7 @@ public class Fragment_Register_Linen extends Fragment implements OnCheckedChange
         tgl= (EditText) view.findViewById(R.id.tanggal);
         spinner= (Spinner) view.findViewById(R.id.spinner1);
         id_jenis= (Spinner) view.findViewById(R.id.spinner2);
+        lscan = (LinearLayout) view.findViewById(R.id.lscan) ;
 
         lvEpc.setFocusable(false);
         lvEpc.setClickable(false);
@@ -211,6 +218,63 @@ public class Fragment_Register_Linen extends Fragment implements OnCheckedChange
         btnSync.setOnClickListener(this);
         btnRemove.setOnClickListener(this);
         edittext.setOnClickListener(this);
+        txtScan= (EditText) view.findViewById(R.id.textView_scan);
+        txtScan.setOnKeyListener(new View.OnKeyListener() {
+            @Override
+            public boolean onKey(View v, int keyCode, KeyEvent event) {
+                if ((keyCode == KeyEvent.KEYCODE_ENTER)) {
+
+                    try {
+                        String epc = txtScan.getText().toString();
+                        SQLiteDatabase db = mHelper.getReadableDatabase();
+                        String whereClause = InputDbHelper.SERIAL +"=?";
+                        String [] whereArgs = {epc};
+
+                        Cursor cursor_header = db.query(TABLE_BARANG,
+                                new String[]{
+                                        InputDbHelper.SERIAL},
+                                whereClause,
+                                whereArgs,
+                                null,
+                                null,
+                                null);
+                        int ii = 0;
+                        while (cursor_header.moveToNext()) {
+                            int id_serial = cursor_header.getColumnIndex(InputDbHelper.SERIAL);
+                            String no_serial = cursor_header.getString(id_serial);
+
+                            Message msg = new Message() ;
+                            msg.what = 1 ;
+                            Bundle b = new Bundle();
+                            b.putString("epc", epc);
+                            b.putString("status", "Terdaftar");
+                            msg.setData(b);
+                            handler.sendMessage(msg);
+                        }
+
+                        if(cursor_header.getCount()<=0){
+                            Message msg = new Message() ;
+                            msg.what = 1 ;
+                            Bundle b = new Bundle();
+                            b.putString("epc", epc);
+                            b.putString("status", "-");
+                            msg.setData(b);
+                            handler.sendMessage(msg);
+                        }
+                    }catch (Exception ex){
+
+                    }
+                }
+                return false;
+            }
+        });
+
+        if(prefMode.getBoolean("MODE", false) == true){
+            lscan.setVisibility(View.GONE);
+            btnStart.setEnabled(true);
+        }else{
+            btnStart.setEnabled(false);
+        }
 
         mHelper = new InputDbHelper(getActivity());
 
@@ -365,17 +429,22 @@ public class Fragment_Register_Linen extends Fragment implements OnCheckedChange
         if (keyControl) {
             keyControl = false;
             if (!isStart) {
-                Activity_Register_Linen.mUhfrManager.setCancleInventoryFilter();
-                isRunning = true;
-                if (isMulti) {
-                    Activity_Register_Linen.mUhfrManager.setFastMode();
-                    Activity_Register_Linen.mUhfrManager.asyncStartReading();
-                }else {
-                    Activity_Register_Linen.mUhfrManager.setCancleFastMode();
+                if(Activity_Register_Linen.mUhfrManager == null){
+                    showToast("Fungsi ini berlaku hanya untuk handheld");
+                }else{
+                    Activity_Register_Linen.mUhfrManager.setCancleInventoryFilter();
+                    isRunning = true;
+                    if (isMulti) {
+                        Activity_Register_Linen.mUhfrManager.setFastMode();
+                        Activity_Register_Linen.mUhfrManager.asyncStartReading();
+                    }else {
+                        Activity_Register_Linen.mUhfrManager.setCancleFastMode();
+                    }
+                    new Thread(inventoryTask).start();
+                    btnStart.setText(getResources().getString(R.string.stop_inventory_epc));
+                    isStart = true;
                 }
-                new Thread(inventoryTask).start();
-                btnStart.setText(getResources().getString(R.string.stop_inventory_epc));
-                isStart = true;
+
             } else {
                 if (isMulti)
                     Activity_Register_Linen.mUhfrManager.asyncStopReading();
@@ -469,7 +538,7 @@ public class Fragment_Register_Linen extends Fragment implements OnCheckedChange
                                             JSONObject jsonObject = new JSONObject(response);
                                             String status_kirim = jsonObject.getString("status");
                                             if (status_kirim.equals("200")) {
-                                                Toast.makeText(getActivity(), "Data $epcName tersimpan", Toast.LENGTH_SHORT).show();
+                                                Toast.makeText(getActivity(), "Data "+ epcName + " tersimpan", Toast.LENGTH_SHORT).show();
                                             }
                                         } catch (JSONException e) {
                                             e.printStackTrace();
@@ -502,8 +571,8 @@ public class Fragment_Register_Linen extends Fragment implements OnCheckedChange
 
                 db.close();
                 showToast("Sukses menyimpan..");
-                Intent intent = new Intent(getActivity(), ListRegisterLinen.class);
-                startActivity(intent);
+//                Intent intent = new Intent(getActivity(), ListRegisterLinen.class);
+//                startActivity(intent);
                 break ;
         }
     }
@@ -627,7 +696,9 @@ public class Fragment_Register_Linen extends Fragment implements OnCheckedChange
             adapter.notifyDataSetChanged();
         allCount = 0 ;
         tvTagSum.setText("0");
-        Activity_Register_Linen.mSetEpcs.clear();
+        if(Activity_Register_Linen.mSetEpcs != null){
+            Activity_Register_Linen.mSetEpcs.clear();
+        }
     }
 
 

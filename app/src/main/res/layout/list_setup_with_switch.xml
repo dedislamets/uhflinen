@@ -31,5 +31,9 @@
         android:text="First Lines"
         android:textSize="16sp" />
 
+    <Switch
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/unswitch" />
 
 </RelativeLayout>

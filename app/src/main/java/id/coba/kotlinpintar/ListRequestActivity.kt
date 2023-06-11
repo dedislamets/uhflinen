@@ -191,15 +191,13 @@ class ListRequestActivity : AppCompatActivity() , View.OnClickListener {
             Response.Listener<String> { response ->
                 var jsonObject: JSONObject = JSONObject(response)
                 var status_kirim : String = jsonObject.getString("status")
-                var jsonArray: JSONArray = jsonObject.getJSONArray("data")
-                var jsonArray_detail: JSONArray = jsonObject.getJSONArray("data_detail")
+                var cursor_del : Cursor = mHelper.deleteRequest()
+                cursor_del.moveToFirst()
+                cursor_del.close()
                 if (status_kirim.equals("true")){
                     val db = mHelper.getWritableDatabase()
-
-                    var cursor_del : Cursor = mHelper.deleteRequest()
-                    cursor_del.moveToFirst()
-                    cursor_del.close()
-
+                    var jsonArray: JSONArray = jsonObject.getJSONArray("data")
+                    var jsonArray_detail: JSONArray = jsonObject.getJSONArray("data_detail")
                     for (i in 0 until jsonArray.length()) {
                         val item = jsonArray.getJSONObject(i)
                         var no_request : String = item.getString(NO_REQUEST)

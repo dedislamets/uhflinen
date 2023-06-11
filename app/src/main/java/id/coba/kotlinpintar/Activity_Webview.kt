@@ -19,6 +19,7 @@ class Activity_Webview : AppCompatActivity() {
 
         val url = getIntent().getStringExtra("url")
 
+
         webView = findViewById(R.id.webView)
         webView.settings.setJavaScriptEnabled(true)
 //        webView.addJavascriptInterface(JavascriptInterface(),"androidObj")
@@ -41,7 +42,7 @@ class Activity_Webview : AppCompatActivity() {
             }
         }
 
-        getSupportActionBar()?.setTitle("Form Penerimaan Linen")
+        getSupportActionBar()?.setTitle(getIntent().getStringExtra("title"))
         getSupportActionBar()?.setDisplayHomeAsUpEnabled(true)
         getSupportActionBar()?.setDisplayShowHomeEnabled(true)
     }

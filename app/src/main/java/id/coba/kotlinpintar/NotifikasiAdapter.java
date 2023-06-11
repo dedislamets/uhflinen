@@ -42,39 +42,42 @@ public class NotifikasiAdapter extends BaseAdapter {
     }
 
     public long getItemId(int position) {
-        return position;
+        return 0;
     }
 
     public View getView(int position, View convertView, ViewGroup parent) {
         View vi=convertView;
-        if(convertView==null)
+
+        if (convertView == null) {
             vi = inflater.inflate(R.layout.list_notifikasi, null);
 
-        TextView id = vi.findViewById(R.id.id_notifikasi);
-        TextView short_msg = vi.findViewById(R.id.short_msg);
-        TextView waktu = vi.findViewById(R.id.waktu);
-        TextView page_url = vi.findViewById(R.id.page_url);
+            TextView id = vi.findViewById(R.id.id_notifikasi);
+            TextView short_msg = vi.findViewById(R.id.short_msg);
+            TextView waktu = vi.findViewById(R.id.waktu);
+            TextView page_url = vi.findViewById(R.id.page_url);
 
-        HashMap<String, String> song = new HashMap<String, String>();
-        song = data.get(position);
+            HashMap<String, String> song = new HashMap<String, String>();
+            song = data.get(position);
 
 
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
+            try {
+                Date d = sdf.parse(song.get("TANGGAL"));
+                sdf.applyPattern("d MMM yyyy, hh:mm");
+                waktu.setText(sdf.format(d));
+            } catch (ParseException ex) {
+                //Log.v("Exception", ex.getLocalizedMessage());
+            }
 
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
-        try {
-            Date d = sdf.parse(song.get("TANGGAL"));
-            sdf.applyPattern("d MMM yyyy, hh:mm");
-            waktu.setText(sdf.format(d));
-        } catch (ParseException ex) {
-            //Log.v("Exception", ex.getLocalizedMessage());
+            id.setText(song.get("ID"));
+            short_msg.setText(song.get("SHORT"));
+            page_url.setText(song.get("URL"));
+            if(song.get("DIBACA").equals(0) || song.get("DIBACA").equals("0")){
+                vi.setBackgroundColor(Color.parseColor("#e2e2e2"));
+            }
         }
 
-        id.setText(song.get("ID"));
-        short_msg.setText(song.get("SHORT"));
-        page_url.setText(song.get("URL"));
-        if(song.get("DIBACA").equals(0) || song.get("DIBACA").equals("0")){
-            vi.setBackgroundColor(Color.parseColor("#e2e2e2"));
-        }
+
         return vi;
     }
 

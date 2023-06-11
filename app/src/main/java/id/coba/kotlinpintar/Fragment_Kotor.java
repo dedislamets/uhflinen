@@ -1,11 +1,13 @@
 package id.coba.kotlinpintar;
 
+import android.app.Activity;
 import android.app.DatePickerDialog;
 import android.content.BroadcastReceiver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Color;
@@ -13,13 +15,17 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 
+import android.text.Editable;
+import android.text.InputType;
 import android.text.TextUtils;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
@@ -28,6 +34,7 @@ import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.GridView;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -35,10 +42,12 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.cursoradapter.widget.SimpleCursorAdapter;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
 
 import com.BRMicro.Tools;
 import com.android.volley.AuthFailureError;
@@ -51,8 +60,9 @@ import com.uhf.api.cls.Reader.TAGINFO;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.time.LocalDateTime;
+//import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -65,6 +75,7 @@ import java.util.Set;
 import java.text.DecimalFormat;
 
 import static id.coba.kotlinpintar.InputDbHelper.BERAT;
+import static id.coba.kotlinpintar.InputDbHelper.JENIS_INFEKSIUS;
 import static id.coba.kotlinpintar.InputDbHelper.KATEGORI;
 import static id.coba.kotlinpintar.InputDbHelper.KELUAR;
 import static id.coba.kotlinpintar.InputDbHelper.KOTOR;
@@ -73,6 +84,7 @@ import static id.coba.kotlinpintar.InputDbHelper.TABLE_BERSIH_DETAIL;
 import static id.coba.kotlinpintar.InputDbHelper.TABLE_JENIS_BARANG;
 import static id.coba.kotlinpintar.InputDbHelper.TABLE_KELUAR_DETAIL;
 import static id.coba.kotlinpintar.InputDbHelper.TOTAL_BERAT;
+import static id.coba.kotlinpintar.InputDbHelper.TOTAL_BERAT_REAL;
 import static id.coba.kotlinpintar.InputDbHelper.TOTAL_QTY;
 import static id.coba.kotlinpintar.Rest.ApiClient.BASE_URL;
 
@@ -80,6 +92,7 @@ public class Fragment_Kotor extends Fragment implements OnCheckedChangeListener,
     private View view;// this fragment UI
     private TextView tvTagSum ;
     private TextView tvTagSumBerat ;
+    private EditText tvTagSumBeratReal ;
     private ListView lvEpc;// epc list view
     private Button btnStart ;//inventory button
     private Button btnClear ;// clear button
@@ -87,13 +100,16 @@ public class Fragment_Kotor extends Fragment implements OnCheckedChangeListener,
     private Button btnSync ;
     private Button btnRemove ;
     private EditText edittext;
+    private EditText txtScan;
     private EditText noTransaksi;
     private EditText tgl;
     private Spinner spinner_pic;
     private Spinner spinner_kategori;
+    private Spinner spinner_infeksius;
     private EditText person;
     private CheckBox checkMulti ;//multi model check box
     private ArrayList<HashMap> listEpc;
+    private LinearLayout lscan;
 
     private Set<String> epcSet = null ;
 //    private List<HashMap> listEpc = null;//EPC list
@@ -112,6 +128,8 @@ public class Fragment_Kotor extends Fragment implements OnCheckedChangeListener,
     private Toolbar toolbar;
     private SimpleCursorAdapter adapterPIC ;
     private SimpleCursorAdapter adapterKategori ;
+    private SimpleCursorAdapter adapterInfeksius ;
+    private SharedPreferences prefMode;
     //handler
     private Handler handler = new Handler(){
         @Override
@@ -151,6 +169,7 @@ public class Fragment_Kotor extends Fragment implements OnCheckedChangeListener,
                         mapEpc.put("exist", exist);
 
                         listEpc.add(mapEpc);
+
                         hitungBerat(berat);
 //                        epcSet.add(epc);
 //                        mapEpc.put(epc, 0);
@@ -167,7 +186,7 @@ public class Fragment_Kotor extends Fragment implements OnCheckedChangeListener,
                         Util.play(1, 0);
                         KotorActivity.mSetEpcs=epcSet;
                     }else{
-                        if (epcSet.contains(epc)) {//set already exit
+                        if (epcSet.contains(epc.replace("\n",""))) {//set already exit
 //                            position = mapEpc.get(epc);
 //                            EpcDataModel epcOld = listEpc.get(position);
 //                            listEpc.set(position, epcOld);
@@ -198,12 +217,9 @@ public class Fragment_Kotor extends Fragment implements OnCheckedChangeListener,
                             }
 
                         }
-
-
                         tvTagSum.setText("" + listEpc.size());
-
                         adapter.notifyDataSetChanged();
-
+                        txtScan.setText("");
                     }
 
                     break ;
@@ -216,6 +232,7 @@ public class Fragment_Kotor extends Fragment implements OnCheckedChangeListener,
         // TODO Auto-generated method stub
         Log.e("f1","create view");
         view= inflater.inflate(R.layout.fragment_kotor, null);
+        prefMode = getContext().getSharedPreferences("MODE", Context.MODE_PRIVATE);
         initView();
 
 
@@ -234,6 +251,7 @@ public class Fragment_Kotor extends Fragment implements OnCheckedChangeListener,
         Float litersOfPetrol=Float.parseFloat(berat);
         tb += litersOfPetrol;
         tvTagSumBerat.setText( String.format("%.1f", tb) );
+        tvTagSumBeratReal.setText( String.format("%.1f", tb) );
     }
 
     private void initView() {
@@ -241,6 +259,7 @@ public class Fragment_Kotor extends Fragment implements OnCheckedChangeListener,
         btnStart = (Button) view.findViewById(R.id.button_start);
         tvTagSum = (TextView) view.findViewById(R.id.textView_tag) ;
         tvTagSumBerat = (TextView) view.findViewById(R.id.textView_total_berat) ;
+        tvTagSumBeratReal = (EditText) view.findViewById(R.id.textView_total_berat_real) ;
         btnClear = (Button) view.findViewById(R.id.button_clear_epc) ;
         btnSimpan = (Button) view.findViewById(R.id.button_simpan) ;
         btnSync = (Button) view.findViewById(R.id.button_sync) ;
@@ -248,6 +267,9 @@ public class Fragment_Kotor extends Fragment implements OnCheckedChangeListener,
         edittext= (EditText) view.findViewById(R.id.tanggal);
         spinner_pic= view.findViewById(R.id.spinner_pic);
         spinner_kategori= view.findViewById(R.id.spinner_kategori);
+        spinner_infeksius= view.findViewById(R.id.spinner_infeksius);
+        txtScan= (EditText) view.findViewById(R.id.textView_scan);
+        lscan = (LinearLayout) view.findViewById(R.id.lscan) ;
 
         noTransaksi= (EditText) view.findViewById(R.id.no_transaksi);
         setAutoNumber();
@@ -266,24 +288,100 @@ public class Fragment_Kotor extends Fragment implements OnCheckedChangeListener,
         btnSync.setOnClickListener(this);
         btnRemove.setOnClickListener(this);
         edittext.setOnClickListener(this);
+        txtScan.setOnKeyListener(new View.OnKeyListener() {
+            @Override
+            public boolean onKey(View v, int keyCode, KeyEvent event) {
+                if ((keyCode == KeyEvent.KEYCODE_ENTER)) {
+
+                    String epc = txtScan.getText().toString().replace("\n","");
+                    Message msg = new Message() ;
+                    msg.what = 1 ;
+                    Bundle b = new Bundle();
+                    b.putString("epc", epc);
+                    b.putString("exist", "0");
+
+                    try {
+                        SQLiteDatabase db = mHelper.getReadableDatabase();
+                        String selectQuery = "SELECT A.*,B.jenis,B.berat FROM " + TABLE_BARANG + " A LEFT JOIN " + TABLE_JENIS_BARANG + " B ON A.ID_JENIS=B.ID_JENIS WHERE serial='" + epc + "'";
+                        Cursor cursor_header = db.rawQuery(selectQuery, null);
+                        int count = cursor_header.getCount();
+                        if (count > 0) {
+                            while (cursor_header.moveToNext()) {
+                                String ruangan = cursor_header.getString(cursor_header.getColumnIndex(InputDbHelper.NAMA_RUANGAN));
+                                String jenis = cursor_header.getString(cursor_header.getColumnIndex(InputDbHelper.JENIS));
+                                String berat = cursor_header.getString(cursor_header.getColumnIndex(InputDbHelper.BERAT));
+
+                                b.putString("rssi", ruangan);
+                                b.putString("item", jenis);
+                                b.putString("berat", berat);
+
+                                String exist = "";
+                                selectQuery = "SELECT b.* FROM linen_kotor a " +
+                                        "JOIN linen_kotor_detail b ON a.transaksi=b.transaksi " +
+                                        "WHERE STATUS='CUCI' AND epc='" + epc + "' AND a.transaksi<>'" + noTransaksi.getText().toString() + "'";
+                                Cursor cursor_exist = db.rawQuery(selectQuery, null);
+                                while (cursor_exist.moveToNext()) {
+                                    exist = "1";
+                                }
+                                b.putString("exist", exist);
+                            }
+                        }else{
+                            String ruangan = "-";
+                            String jenis = "Tidak Terdaftar!";
+                            String berat = "0";
+
+                            b.putString("rssi", ruangan);
+                            b.putString("item", jenis);
+                            b.putString("berat", berat);
+                            b.putString("exist", "");
+                        }
+                        msg.setData(b);
+                        handler.sendMessage(msg);
+
+                    }catch (Exception ex) {
+                    }
+                }
+                return false;
+            }
+        });
+
+        if(prefMode.getBoolean("MODE", false) == true){
+            lscan.setVisibility(View.GONE);
+            btnStart.setEnabled(true);
+        }else{
+            btnStart.setEnabled(false);
+        }
 
         mHelper = new InputDbHelper(getActivity());
         tvTagSumBerat.setText("0");
+        tvTagSum.setText("0");
 
         updateLabel();
+
         loadspinner();
         String no = getArguments().getString("no_transaksi");
 
         if (no != null){
             updateUI(no);
         }
-
         ((AppCompatActivity)getActivity()).getSupportActionBar().setTitle("Form Linen Kotor");
         ((AppCompatActivity)getActivity()).getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         ((AppCompatActivity)getActivity()).getSupportActionBar().setDisplayShowHomeEnabled(true);
 
     }
+    public static void showKeyboard(Activity activity) {
+        if (activity != null) {
+            activity.getWindow()
+                    .setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE);
+        }
+    }
 
+    public static void hideKeyboard(Activity activity) {
+        if (activity != null) {
+            activity.getWindow()
+                    .setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
+        }
+    }
     private void loadspinner() {
 
         InputDbHelper db = new InputDbHelper(getActivity());
@@ -300,6 +398,13 @@ public class Fragment_Kotor extends Fragment implements OnCheckedChangeListener,
         adapterKategori = new SimpleCursorAdapter(getActivity(), android.R.layout.simple_spinner_dropdown_item, kategoriCursor, from_kategori, to_kategori, 0);
         adapterKategori.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinner_kategori.setAdapter(adapterKategori);
+
+        final Cursor infeksiusCursor = db.getInfeksiusCursor();
+        String[] from_infeksius = {"infeksius"};
+        int[] to_infeksius = {android.R.id.text1};
+        adapterInfeksius = new SimpleCursorAdapter(getActivity(), android.R.layout.simple_spinner_dropdown_item, infeksiusCursor, from_infeksius, to_infeksius, 0);
+        adapterInfeksius.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinner_infeksius.setAdapter(adapterInfeksius);
 
     }
 
@@ -398,32 +503,45 @@ public class Fragment_Kotor extends Fragment implements OnCheckedChangeListener,
 //                                    null,
 //                                    null,
 //                                    null);
+                            try {
+                                String selectQuery = "SELECT A.*,B.jenis,B.berat FROM " + TABLE_BARANG + " A LEFT JOIN " + TABLE_JENIS_BARANG + " B ON A.ID_JENIS=B.ID_JENIS WHERE serial='" + epc + "'";
+                                Cursor cursor_header = db.rawQuery(selectQuery, null);
+                                int count = cursor_header.getCount();
+                                if (count > 0) {
+                                    while (cursor_header.moveToNext()) {
+                                        String ruangan = cursor_header.getString(cursor_header.getColumnIndex(InputDbHelper.NAMA_RUANGAN));
+                                        String jenis = cursor_header.getString(cursor_header.getColumnIndex(InputDbHelper.JENIS));
+                                        String berat = cursor_header.getString(cursor_header.getColumnIndex(InputDbHelper.BERAT));
 
-                            String selectQuery = "SELECT A.*,B.jenis,B.berat FROM " + TABLE_BARANG + " A JOIN " + TABLE_JENIS_BARANG + " B ON A.ID_JENIS=B.ID_JENIS WHERE serial=" + epc;
-                            Cursor cursor_header = db.rawQuery(selectQuery, null);
+                                        b.putString("rssi", ruangan);
+                                        b.putString("item", jenis);
+                                        b.putString("berat", berat);
 
-                            while (cursor_header.moveToNext()) {
-                                String ruangan = cursor_header.getString(cursor_header.getColumnIndex(InputDbHelper.NAMA_RUANGAN));
-                                String jenis = cursor_header.getString(cursor_header.getColumnIndex(InputDbHelper.JENIS));
-                                String berat = cursor_header.getString(cursor_header.getColumnIndex(InputDbHelper.BERAT));
+                                        String exist = "";
+                                        selectQuery = "SELECT b.* FROM linen_kotor a " +
+                                                "JOIN linen_kotor_detail b ON a.transaksi=b.transaksi " +
+                                                "WHERE STATUS='CUCI' AND epc='" + epc + "' AND a.transaksi<>'" + noTransaksi.getText().toString() + "'";
+                                        Cursor cursor_exist = db.rawQuery(selectQuery, null);
+                                        while (cursor_exist.moveToNext()) {
+                                            exist = "1";
+                                        }
+                                        b.putString("exist", exist);
+                                    }
+                                }else{
+                                    String ruangan = "-";
+                                    String jenis = "Tidak Terdaftar!";
+                                    String berat = "0";
 
-                                b.putString("rssi", ruangan);
-                                b.putString("item", jenis);
-                                b.putString("berat", berat);
-
-                                String exist = "";
-                                selectQuery = "SELECT b.* FROM linen_kotor a " +
-                                        "JOIN linen_kotor_detail b ON a.transaksi=b.transaksi " +
-                                        "WHERE STATUS='CUCI' AND epc='" + epc +"' AND a.transaksi<>'" + noTransaksi.getText().toString() + "'";
-                                Cursor cursor_exist = db.rawQuery(selectQuery, null);
-                                while (cursor_exist.moveToNext()) {
-                                    exist = "1";
+                                    b.putString("rssi", ruangan);
+                                    b.putString("item", jenis);
+                                    b.putString("berat", berat);
+                                    b.putString("exist", "");
                                 }
-                                b.putString("exist", exist);
+                                msg.setData(b);
+                                handler.sendMessage(msg);
+                            }catch (Exception ex) {
+//                                Toast.makeText(getActivity(),ex.getMessage().toString(),Toast.LENGTH_LONG);
                             }
-
-                            msg.setData(b);
-                            handler.sendMessage(msg);
                         }
                     }
                     //inventory epc + tid
@@ -452,23 +570,25 @@ public class Fragment_Kotor extends Fragment implements OnCheckedChangeListener,
         if (keyControl) {
             keyControl = false;
             if (!isStart) {
-                KotorActivity.mUhfrManager.setCancleInventoryFilter();
-                isRunning = true;
-                if (isMulti) {
-                    KotorActivity.mUhfrManager.setFastMode();
-                    KotorActivity.mUhfrManager.asyncStartReading();
-                }else {
-                    KotorActivity.mUhfrManager.setCancleFastMode();
+                if(KotorActivity.mUhfrManager == null){
+                    showToast("Fungsi ini berlaku hanya untuk handheld");
+                }else{
+
+                    KotorActivity.mUhfrManager.setCancleInventoryFilter();
+                    isRunning = true;
+                    if (isMulti) {
+                        KotorActivity.mUhfrManager.setFastMode();
+                        KotorActivity.mUhfrManager.asyncStartReading();
+                    }else {
+                        KotorActivity.mUhfrManager.setCancleFastMode();
+                    }
+
+                    new Thread(inventoryTask).start();
+                    btnStart.setText(getResources().getString(R.string.stop_inventory_epc));
+                    isStart = true;
                 }
-                new Thread(inventoryTask).start();
-//                checkMulti.setClickable(false);
-//                checkMulti.setTextColor(Color.GRAY);
-                btnStart.setText(getResources().getString(R.string.stop_inventory_epc));
-//            Log.e("inventoryTask", "start inventory") ;
-                isStart = true;
+
             } else {
-//                checkMulti.setClickable(true);
-//                checkMulti.setTextColor(Color.BLACK);
                 if (isMulti)
                     KotorActivity.mUhfrManager.asyncStopReading();
                 else
@@ -503,6 +623,7 @@ public class Fragment_Kotor extends Fragment implements OnCheckedChangeListener,
                 break ;
             case R.id.button_sync:
                 updateUI("");
+
                 showToast("Sync sukses.");
                 break ;
             case R.id.button_remove:
@@ -515,6 +636,7 @@ public class Fragment_Kotor extends Fragment implements OnCheckedChangeListener,
                 String no_transaksi = ((EditText) getActivity().findViewById(R.id.no_transaksi)).getText().toString();
                 String tanggal = ((EditText) getActivity().findViewById(R.id.tanggal)).getText().toString();
                 String berat = tvTagSumBerat.getText().toString();
+                String berat_real = tvTagSumBeratReal.getText().toString();
                 String qty = tvTagSum.getText().toString();
 
                 Cursor qc = adapterPIC.getCursor();
@@ -523,12 +645,23 @@ public class Fragment_Kotor extends Fragment implements OnCheckedChangeListener,
                 Cursor qc_kategori = adapterKategori.getCursor();
                 final String kategori = qc_kategori.getString(qc_kategori.getColumnIndex("kategori"));
 
+                Cursor qc_infeksius = adapterInfeksius.getCursor();
+                final String infeksius = qc_infeksius.getString(qc_infeksius.getColumnIndex("infeksius"));
+
                 if(TextUtils.isEmpty(no_transaksi)){
                     Toast.makeText(getActivity(),"PIC Kosong",Toast.LENGTH_SHORT).show();
                     break;
                 }
                 if(lvEpc.getCount() <=0){
                     Toast.makeText(getActivity(),"Belum ada data linen di scan.!",Toast.LENGTH_SHORT).show();
+                    break;
+                }
+                if(berat_real.equals("")){
+                    Toast.makeText(getActivity(),"Berat Timbang harus > 0",Toast.LENGTH_SHORT).show();
+                    break;
+                }
+                if(berat_real == ""){
+                    Toast.makeText(getActivity(),"Berat Timbang tidak boleh kosong",Toast.LENGTH_SHORT).show();
                     break;
                 }
 
@@ -541,7 +674,7 @@ public class Fragment_Kotor extends Fragment implements OnCheckedChangeListener,
                     }
                     if (num.get("exist").equals("1")) {
                         exist = true;
-                        Toast.makeText(getActivity(), "Ada linen belum di proses di transaksi lain.!", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getActivity(), "Serial " + num.get("epc") + " belum di proses di transaksi lain.!", Toast.LENGTH_SHORT).show();
                         break;
                     }
 
@@ -578,8 +711,10 @@ public class Fragment_Kotor extends Fragment implements OnCheckedChangeListener,
                 values_header.put(InputContract.TaskEntry.PIC,   pic);
                 values_header.put(InputContract.TaskEntry.STATUS,   "CUCI");
                 values_header.put(KATEGORI,   kategori);
+                values_header.put(JENIS_INFEKSIUS,   infeksius);
                 values_header.put(TOTAL_QTY,   qty);
                 values_header.put(TOTAL_BERAT,   berat);
+                values_header.put(TOTAL_BERAT_REAL,   berat_real);
                 values_header.put(InputContract.TaskEntry.CURRENT_INSERT, getDateTime());
 
                 db.insertWithOnConflict(InputContract.TaskEntry.TABLE, null, values_header, SQLiteDatabase.CONFLICT_REPLACE);
@@ -639,7 +774,9 @@ public class Fragment_Kotor extends Fragment implements OnCheckedChangeListener,
                         cursor.getString(cursor.getColumnIndex(InputContract.TaskEntry.PIC)),
                         cursor.getString(cursor.getColumnIndex(InputContract.TaskEntry.STATUS)),
                         cursor.getString(cursor.getColumnIndex(KATEGORI)),
+                        cursor.getString(cursor.getColumnIndex(JENIS_INFEKSIUS)),
                         cursor.getString(cursor.getColumnIndex(TOTAL_BERAT)),
+                        cursor.getString(cursor.getColumnIndex(TOTAL_BERAT_REAL)),
                         cursor.getString(cursor.getColumnIndex(TOTAL_QTY))
                 );
 
@@ -659,7 +796,7 @@ public class Fragment_Kotor extends Fragment implements OnCheckedChangeListener,
         }
     }
 
-    private void saveHeader(final Integer id,final String no_transaksi, final String tanggal, final String pic, final String status, final String kategori, final String total_berat, final String total_qty) {
+    private void saveHeader(final Integer id,final String no_transaksi, final String tanggal, final String pic, final String status, final String kategori, final String infeksius, final String total_berat, final String total_berat_real, final String total_qty) {
         StringRequest stringRequest = new StringRequest(Request.Method.POST, BASE_URL+ "linen_kotor",
                 new Response.Listener<String>() {
                     @Override
@@ -691,8 +828,10 @@ public class Fragment_Kotor extends Fragment implements OnCheckedChangeListener,
                 params.put("tanggal", tanggal);
                 params.put("pic", pic);
                 params.put("status", status);
-                params.put("kategori", "");
+                params.put("kategori", kategori);
+                params.put("infeksius", infeksius);
                 params.put("total_berat", total_berat);
+                params.put("total_berat_real", total_berat_real);
                 params.put("total_qty", total_qty);
                 return params;
             }
@@ -794,7 +933,7 @@ public class Fragment_Kotor extends Fragment implements OnCheckedChangeListener,
                         InputContract.TaskEntry.NO_TRANSAKSI,
                         InputContract.TaskEntry.TANGGAL,
                         InputContract.TaskEntry.PIC,
-                        KATEGORI},
+                        KATEGORI, JENIS_INFEKSIUS, TOTAL_BERAT_REAL},
                 whereClause,
                 whereArgs,
                 null,
@@ -806,19 +945,24 @@ public class Fragment_Kotor extends Fragment implements OnCheckedChangeListener,
             int id_tanggal = cursor_header.getColumnIndex(InputContract.TaskEntry.TANGGAL);
             int id_pic = cursor_header.getColumnIndex(InputContract.TaskEntry.PIC);
             int id_kategori = cursor_header.getColumnIndex(KATEGORI);
+            int id_infeksius = cursor_header.getColumnIndex(JENIS_INFEKSIUS);
+            int id_berat_real = cursor_header.getColumnIndex(TOTAL_BERAT_REAL);
 
 
             String no_transaksi = cursor_header.getString(id_no_transaksi);
             String tanggal = cursor_header.getString(id_tanggal);
             String pic = cursor_header.getString(id_pic);
             String kategori = cursor_header.getString(id_kategori);
+            String infeksius = cursor_header.getString(id_infeksius);
+            String total_berat_real = cursor_header.getString(id_berat_real);
 
             noTransaksi.setText(no_transaksi);
             tgl.setText(tanggal);
-
+            tvTagSumBeratReal.setText(total_berat_real);
 
             getIndexByString(spinner_pic,pic);
             getIndexKategori(spinner_kategori, kategori);
+            getIndexInfeksius(spinner_infeksius, infeksius);
         }
 
         String [] whereArgsDetail = {noTrans};
@@ -897,6 +1041,17 @@ public class Fragment_Kotor extends Fragment implements OnCheckedChangeListener,
             }
         }
     }
+    private void getIndexInfeksius(Spinner spinner, String string) {
+        for (int i = 0; i < spinner.getCount(); i++) {
+            Cursor value = (Cursor) spinner.getItemAtPosition(i);
+            String name = value.getString(value.getColumnIndex("infeksius"));
+            if (name.equals(string))
+            {
+                spinner.setSelection(i);
+                break;
+            }
+        }
+    }
 
     public void deleteTask() {
         SQLiteDatabase db = mHelper.getWritableDatabase();
@@ -932,7 +1087,10 @@ public class Fragment_Kotor extends Fragment implements OnCheckedChangeListener,
             adapter.notifyDataSetChanged();
         allCount = 0 ;
         tvTagSum.setText("0");
-        KotorActivity.mSetEpcs.clear();
+        tvTagSumBerat.setText("0");
+        if(KotorActivity.mSetEpcs != null) {
+            KotorActivity.mSetEpcs.clear();
+        }
 //        lvEpc.removeAllViews();
     }
 

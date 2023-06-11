@@ -2,8 +2,6 @@ package id.coba.kotlinpintar;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.time.format.DateTimeFormatter;
-import java.time.format.FormatStyle;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -61,12 +59,10 @@ public class LazyAdapter extends BaseAdapter {
         HashMap<String, String> song = new HashMap<String, String>();
         song = data.get(position);
 
-
-
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ENGLISH);
         try {
             Date d = sdf.parse(song.get(CustomizedListView.KEY_DURATION));
-            sdf.applyPattern("d MMM yyyy, hh:mm");
+            sdf.applyPattern("d MMMM yyyy, hh:mm");
             duration.setText(sdf.format(d));
         } catch (ParseException ex) {
             //Log.v("Exception", ex.getLocalizedMessage());

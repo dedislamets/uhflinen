@@ -90,6 +90,7 @@ public class Fragment_Rusak extends Fragment implements OnCheckedChangeListener,
     private Spinner spinner_pic;
     private Spinner spinner_defect;
     private ArrayList<HashMap> listEpc;
+    private EditText txtScan;
 
     private Set<String> epcSet = null ;
     //    private List<HashMap> listEpc = null;//EPC list
@@ -158,7 +159,7 @@ public class Fragment_Rusak extends Fragment implements OnCheckedChangeListener,
                         Util.play(1, 0);
                         RusakActivity.mSetEpcs=epcSet;
                     }else{
-                        if (epcSet.contains(epc)) {//set already exit
+                        if (epcSet.contains(epc.replace("\n",""))) {//set already exit
 //                            position = mapEpc.get(epc);
 //                            EpcDataModel epcOld = listEpc.get(position);
 //                            listEpc.set(position, epcOld);
@@ -176,11 +177,11 @@ public class Fragment_Rusak extends Fragment implements OnCheckedChangeListener,
                             listEpc.add(mapEpc);
 
                             hitungBerat(berat);
-
+                            Util.play(1, 1);
                             RusakActivity.mSetEpcs = epcSet;
                             if(System.currentTimeMillis() - lastTime > 100){
                                 lastTime = System.currentTimeMillis() ;
-                                Util.play(1, 0);
+
                             }
 
                         }
@@ -188,7 +189,7 @@ public class Fragment_Rusak extends Fragment implements OnCheckedChangeListener,
                         tvTagSum.setText("" + listEpc.size());
 
                         adapter.notifyDataSetChanged();
-
+                        txtScan.setText("");
                     }
 
                     break ;
@@ -239,6 +240,7 @@ public class Fragment_Rusak extends Fragment implements OnCheckedChangeListener,
         tgl= (EditText) view.findViewById(R.id.tanggal);
         txtCatatan= (EditText) view.findViewById(R.id.catatan);
 
+
         lvEpc.setFocusable(false);
         lvEpc.setClickable(false);
         lvEpc.setItemsCanFocus(false);
@@ -250,6 +252,66 @@ public class Fragment_Rusak extends Fragment implements OnCheckedChangeListener,
         btnSync.setOnClickListener(this);
         btnRemove.setOnClickListener(this);
         edittext.setOnClickListener(this);
+        txtScan= (EditText) view.findViewById(R.id.textView_scan);
+        txtScan.setOnKeyListener(new View.OnKeyListener() {
+            @Override
+            public boolean onKey(View v, int keyCode, KeyEvent event) {
+                if ((keyCode == KeyEvent.KEYCODE_ENTER)) {
+                    String epc = txtScan.getText().toString().replace("\n","");
+                    Message msg = new Message();
+                    msg.what = 1;
+                    Bundle b = new Bundle();
+                    b.putString("epc", epc);
+
+                    try {
+                        SQLiteDatabase db = mHelper.getReadableDatabase();
+
+                        String selectQuery = "SELECT A.*,B.jenis,B.berat FROM " + TABLE_BARANG + " A JOIN " + TABLE_JENIS_BARANG + " B ON A.ID_JENIS=B.ID_JENIS WHERE serial='" + epc + "'";
+                        Cursor cursor_header = db.rawQuery(selectQuery, null);
+
+                        String berat = "0";
+                        String jenis = "";
+                        b.putString("exist", "0");
+                        while (cursor_header.moveToNext()) {
+                            String ruangan = cursor_header.getString(cursor_header.getColumnIndex(InputDbHelper.NAMA_RUANGAN));
+                            jenis = cursor_header.getString(cursor_header.getColumnIndex(InputDbHelper.JENIS));
+                            berat = cursor_header.getString(cursor_header.getColumnIndex(InputDbHelper.BERAT));
+
+                            b.putString("rssi", ruangan);
+                            b.putString("item", jenis);
+                            b.putString("berat", berat);
+
+                            String exist = "";
+                            selectQuery = "SELECT b.* FROM linen_rusak a " +
+                                    "JOIN linen_rusak_detail b ON a.transaksi=b.transaksi " +
+                                    "WHERE epc='" + epc + "' AND a.transaksi<>'" + noTransaksi.getText().toString() + "'";
+                            Cursor cursor_exist = db.rawQuery(selectQuery, null);
+                            while (cursor_exist.moveToNext()) {
+                                exist = "1";
+                            }
+                            b.putString("exist", exist);
+                        }
+
+                        selectQuery = "SELECT COUNT(*) jml " +
+                                "FROM linen_kotor a " +
+                                "JOIN linen_kotor_detail b ON a.transaksi=b.transaksi " +
+                                "WHERE epc='" + epc + "'";
+                        Cursor cursor_jml_cuci = db.rawQuery(selectQuery, null);
+                        String jml_cuci = "0";
+                        b.putString("cuci", jml_cuci);
+                        while (cursor_jml_cuci.moveToNext()) {
+                            jml_cuci = cursor_jml_cuci.getString(cursor_jml_cuci.getColumnIndex("jml"));
+                            b.putString("cuci", jml_cuci);
+                        }
+                        msg.setData(b);
+                        handler.sendMessage(msg);
+                    } catch (Exception ex) {
+
+                    }
+                }
+                return false;
+            }
+        });
 
         mHelper = new InputDbHelper(getActivity());
         tvTagSumBerat.setText("0");
@@ -366,7 +428,7 @@ public class Fragment_Rusak extends Fragment implements OnCheckedChangeListener,
 
                             SQLiteDatabase db = mHelper.getReadableDatabase();
 
-                            String selectQuery = "SELECT A.*,B.jenis,B.berat FROM " + TABLE_BARANG + " A JOIN " + TABLE_JENIS_BARANG + " B ON A.ID_JENIS=B.ID_JENIS WHERE serial=" + epc;
+                            String selectQuery = "SELECT A.*,B.jenis,B.berat FROM " + TABLE_BARANG + " A JOIN " + TABLE_JENIS_BARANG + " B ON A.ID_JENIS=B.ID_JENIS WHERE serial='" + epc + "'";
                             Cursor cursor_header = db.rawQuery(selectQuery, null);
 
                             String berat = "0";
@@ -433,20 +495,22 @@ public class Fragment_Rusak extends Fragment implements OnCheckedChangeListener,
         if (keyControl) {
             keyControl = false;
             if (!isStart) {
-                RusakActivity.mUhfrManager.setCancleInventoryFilter();
-                isRunning = true;
-                if (isMulti) {
-                    RusakActivity.mUhfrManager.setFastMode();
-                    RusakActivity.mUhfrManager.asyncStartReading();
-                }else {
-                    RusakActivity.mUhfrManager.setCancleFastMode();
+                if(KotorActivity.mUhfrManager == null){
+                    showToast("Fungsi ini berlaku hanya untuk handheld");
+                }else{
+                    RusakActivity.mUhfrManager.setCancleInventoryFilter();
+                    isRunning = true;
+                    if (isMulti) {
+                        RusakActivity.mUhfrManager.setFastMode();
+                        RusakActivity.mUhfrManager.asyncStartReading();
+                    }else {
+                        RusakActivity.mUhfrManager.setCancleFastMode();
+                    }
+                    new Thread(inventoryTask).start();
+                    btnStart.setText(getResources().getString(R.string.stop_inventory_epc));
+                    isStart = true;
                 }
-                new Thread(inventoryTask).start();
-//                checkMulti.setClickable(false);
-//                checkMulti.setTextColor(Color.GRAY);
-                btnStart.setText(getResources().getString(R.string.stop_inventory_epc));
-//            Log.e("inventoryTask", "start inventory") ;
-                isStart = true;
+
             } else {
 //                checkMulti.setClickable(true);
 //                checkMulti.setTextColor(Color.BLACK);
@@ -499,8 +563,9 @@ public class Fragment_Rusak extends Fragment implements OnCheckedChangeListener,
                 String qty = tvTagSum.getText().toString();
 
                 Cursor qc = adapterPIC.getCursor();
+                Cursor qc_def = adapterDefect.getCursor();
                 final String pic = qc.getString(qc.getColumnIndex("nama_user"));
-                final String defect = qc.getString(qc.getColumnIndex("defect"));
+                final String defect = qc_def.getString(qc_def.getColumnIndex("defect"));
 
                 if(TextUtils.isEmpty(no_transaksi)){
                     Toast.makeText(getActivity(),"PIC Kosong",Toast.LENGTH_SHORT).show();
@@ -845,7 +910,9 @@ public class Fragment_Rusak extends Fragment implements OnCheckedChangeListener,
         allCount = 0 ;
         tvTagSum.setText("0");
         tvTagSumBerat.setText("0");
-        RusakActivity.mSetEpcs.clear();
+        if(RusakActivity.mSetEpcs != null){
+            RusakActivity.mSetEpcs.clear();
+        }
 //        lvEpc.removeAllViews();
     }
 

@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Color;
@@ -15,7 +16,9 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 
+import android.text.Editable;
 import android.text.TextUtils;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
@@ -31,6 +34,7 @@ import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.GridView;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -100,9 +104,11 @@ public class Fragment_Bersih extends Fragment implements OnCheckedChangeListener
     private TextView pic_kotor;
     private Spinner spinner_pic;
     private EditText person;
+    private EditText txtScan;
     private CheckBox checkMulti ;//multi model check box
     private ArrayList<HashMap> listEpc;
     private ArrayList<HashMap> listEpc_scan;
+    private LinearLayout lscan;
 
     private Set<String> epcSet = null ; //store different EPC
     private Set<String> epcSet_scan = null ;
@@ -123,6 +129,7 @@ public class Fragment_Bersih extends Fragment implements OnCheckedChangeListener
     private SimpleCursorAdapter adapterPIC ;
     private String DATA_SAVED_BROADCAST = "id.coba.datasaved";
     MaterialAlertDialogBuilder progress;
+    private SharedPreferences prefMode;
     //handler
     private Handler handler = new Handler(){
         @Override
@@ -162,7 +169,7 @@ public class Fragment_Bersih extends Fragment implements OnCheckedChangeListener
                         Util.play(1, 0);
                         BersihActivity.mSetEpcs=epcSet_scan;
                     }else{
-                        if (epcSet_scan.contains(epc)) {//set already exit
+                        if (epcSet_scan.contains(epc.replace("\n",""))) {//set already exit
 
 //                            for (int i = 0; i < listEpc_scan.size(); i++) {
 //                                if(listEpc_scan.get(i).containsValue(epc)){
@@ -194,15 +201,15 @@ public class Fragment_Bersih extends Fragment implements OnCheckedChangeListener
                             mapEpc.put("berat", berat);
 
                             listEpc_scan.add(mapEpc);
-
+                            Util.play(1, 0);
                             BersihActivity.mSetEpcs = epcSet_scan;
                             if(System.currentTimeMillis() - lastTime > 100){
                                 lastTime = System.currentTimeMillis() ;
-                                Util.play(1, 0);
+//                                Util.play(1, 0);
                             }
                         }
 
-                        if (epcSet.contains(epc)) {
+                        if (epcSet.contains(epc.replace("\n",""))) {
 
                         }else{
                             mapEpc = new HashMap();
@@ -222,7 +229,7 @@ public class Fragment_Bersih extends Fragment implements OnCheckedChangeListener
 //                        tvTagSumBerat.setText("0");
 
                         adapter.notifyDataSetChanged();
-
+                        txtScan.setText("");
                     }
 
                     break ;
@@ -235,6 +242,7 @@ public class Fragment_Bersih extends Fragment implements OnCheckedChangeListener
         // TODO Auto-generated method stub
         Log.e("f1","create view");
         view= inflater.inflate(R.layout.fragment_bersih, null);
+        prefMode = getContext().getSharedPreferences("MODE", Context.MODE_PRIVATE);
         initView();
 
 
@@ -257,6 +265,7 @@ public class Fragment_Bersih extends Fragment implements OnCheckedChangeListener
         btnRemove = (Button) view.findViewById(R.id.button_remove) ;
         edittext= (EditText) view.findViewById(R.id.tanggal);
         spinner_pic= view.findViewById(R.id.spinner_pic);
+        lscan = (LinearLayout) view.findViewById(R.id.lscan) ;
 
         txtKategori= (TextView) view.findViewById(R.id.kategori);
         noTransaksi= (TextView) view.findViewById(R.id.no_transaksi);
@@ -272,6 +281,74 @@ public class Fragment_Bersih extends Fragment implements OnCheckedChangeListener
         btnSync.setOnClickListener(this);
         btnRemove.setOnClickListener(this);
         edittext.setOnClickListener(this);
+        txtScan= (EditText) view.findViewById(R.id.textView_scan);
+        txtScan.setOnKeyListener(new View.OnKeyListener() {
+            @Override
+            public boolean onKey(View v, int keyCode, KeyEvent event) {
+                if ((keyCode == KeyEvent.KEYCODE_ENTER)) {
+                    String epc = txtScan.getText().toString().replace("\n","");
+                    Message msg = new Message();
+                    msg.what = 1;
+                    Bundle b = new Bundle();
+                    b.putString("epc", epc);
+                    b.putString("exist", "0");
+
+                    try {
+                        SQLiteDatabase db = mHelper.getReadableDatabase();
+                        String selectQuery = "SELECT A.*,B.jenis,B.berat FROM " + TABLE_BARANG + " A JOIN " + TABLE_JENIS_BARANG + " B ON A.ID_JENIS=B.ID_JENIS WHERE serial='" + epc + "'";
+                        Cursor cursor_header = db.rawQuery(selectQuery, null);
+                        int count = cursor_header.getCount();
+                        if (count > 0) {
+                            while (cursor_header.moveToNext()) {
+                                String ruangan = cursor_header.getString(cursor_header.getColumnIndex(InputDbHelper.NAMA_RUANGAN));
+                                String jenis = cursor_header.getString(cursor_header.getColumnIndex(InputDbHelper.JENIS));
+                                String berat = cursor_header.getString(cursor_header.getColumnIndex(InputDbHelper.BERAT));
+
+                                b.putString("rssi", ruangan);
+                                b.putString("item", jenis);
+                                b.putString("berat", berat);
+                                b.putInt("check", 1);
+                            }
+                        } else {
+
+                            b.putString("rssi", "-");
+                            b.putString("item", "Tidak Terdaftar!");
+                            b.putString("berat", "0");
+                            b.putInt("check", 0);
+                        }
+                        msg.setData(b);
+                        handler.sendMessage(msg);
+
+                    } catch (Exception ex) {
+                    }
+                }
+                return false;
+            }
+        });
+        txtScan.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int counts) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+//
+            }
+        });
+
+        if(prefMode.getBoolean("MODE", false) == true){
+            lscan.setVisibility(View.GONE);
+            btnStart.setEnabled(true);
+        }else{
+            btnStart.setEnabled(false);
+        }
+
         lvEpc.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(final AdapterView<?> parent, final View view, final int position, long id) {
@@ -449,24 +526,33 @@ public class Fragment_Bersih extends Fragment implements OnCheckedChangeListener
 //                                    null,
 //                                    null,
 //                                    null);
+                            try {
+                                String selectQuery = "SELECT A.*,B.jenis,B.berat FROM " + TABLE_BARANG + " A JOIN " + TABLE_JENIS_BARANG + " B ON A.ID_JENIS=B.ID_JENIS WHERE serial='" + epc + "'";
+                                Cursor cursor_header = db.rawQuery(selectQuery, null);
+                                int count = cursor_header.getCount();
+                                if (count > 0) {
+                                    while (cursor_header.moveToNext()) {
+                                        String ruangan = cursor_header.getString(cursor_header.getColumnIndex(InputDbHelper.NAMA_RUANGAN));
+                                        String jenis = cursor_header.getString(cursor_header.getColumnIndex(InputDbHelper.JENIS));
+                                        String berat = cursor_header.getString(cursor_header.getColumnIndex(InputDbHelper.BERAT));
 
-                            String selectQuery = "SELECT A.*,B.jenis,B.berat FROM " + TABLE_BARANG + " A JOIN " + TABLE_JENIS_BARANG + " B ON A.ID_JENIS=B.ID_JENIS WHERE serial=" + epc;
-                            Cursor cursor_header = db.rawQuery(selectQuery, null);
-                            while (cursor_header.moveToNext()) {
-                                String ruangan = cursor_header.getString(cursor_header.getColumnIndex(InputDbHelper.NAMA_RUANGAN));
-                                String jenis = cursor_header.getString(cursor_header.getColumnIndex(InputDbHelper.JENIS));
-                                String berat = cursor_header.getString(cursor_header.getColumnIndex(InputDbHelper.BERAT));
+                                        b.putString("rssi", ruangan);
+                                        b.putString("item", jenis);
+                                        b.putString("berat", berat);
+                                        b.putInt("check", 1);
+                                    }
+                                }else{
 
-                                b.putString("rssi", ruangan);
-                                b.putString("item", jenis);
-                                b.putString("berat", berat);
-                                b.putInt("check", 1);
+                                    b.putString("rssi", "-");
+                                    b.putString("item", "Tidak Terdaftar!");
+                                    b.putString("berat", "0");
+                                    b.putInt("check", 0);
+                                }
+                                msg.setData(b);
+                                handler.sendMessage(msg);
+                            }catch (Exception ex) {
+//                                Toast.makeText(getActivity(),ex.getMessage().toString(),Toast.LENGTH_LONG);
                             }
-
-//                            b.putString("rssi", "Melati");
-//                            b.putString("item", "Pakaian");
-                            msg.setData(b);
-                            handler.sendMessage(msg);
                         }
                     }
                     //inventory epc + tid
@@ -495,20 +581,22 @@ public class Fragment_Bersih extends Fragment implements OnCheckedChangeListener
         if (keyControl) {
             keyControl = false;
             if (!isStart) {
-                BersihActivity.mUhfrManager.setCancleInventoryFilter();
-                isRunning = true;
-                if (isMulti) {
-                    BersihActivity.mUhfrManager.setFastMode();
-                    BersihActivity.mUhfrManager.asyncStartReading();
-                }else {
-                    BersihActivity.mUhfrManager.setCancleFastMode();
+                if(BersihActivity.mUhfrManager == null){
+                    showToast("Fungsi ini berlaku hanya untuk handheld");
+                }else{
+                    BersihActivity.mUhfrManager.setCancleInventoryFilter();
+                    isRunning = true;
+                    if (isMulti) {
+                        BersihActivity.mUhfrManager.setFastMode();
+                        BersihActivity.mUhfrManager.asyncStartReading();
+                    }else {
+                        BersihActivity.mUhfrManager.setCancleFastMode();
+                    }
+                    new Thread(inventoryTask).start();
+                    btnStart.setText(getResources().getString(R.string.stop_inventory_epc));
+                    isStart = true;
                 }
-                new Thread(inventoryTask).start();
-//                checkMulti.setClickable(false);
-//                checkMulti.setTextColor(Color.GRAY);
-                btnStart.setText(getResources().getString(R.string.stop_inventory_epc));
-//            Log.e("inventoryTask", "start inventory") ;
-                isStart = true;
+
             } else {
 //                checkMulti.setClickable(true);
 //                checkMulti.setTextColor(Color.BLACK);
@@ -830,7 +918,7 @@ public class Fragment_Bersih extends Fragment implements OnCheckedChangeListener
             String pic = cursor_header.getString(id_pic);
             String kategori = cursor_header.getString(id_kat);
 
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ENGLISH);
             try {
                 Date d = sdf.parse(tanggal);
                 sdf.applyPattern("d MMM yyyy, hh:mm");
@@ -1052,7 +1140,6 @@ public class Fragment_Bersih extends Fragment implements OnCheckedChangeListener
                             JSONObject obj = new JSONObject(response);
                             if (!obj.getBoolean("error")) {
                                 //updating the status in sqlite
-
 
                                 //sending the broadcast to refresh the list
                                 getActivity().sendBroadcast(new Intent("id.coba.datasaved"));

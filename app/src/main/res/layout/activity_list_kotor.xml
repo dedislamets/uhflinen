@@ -73,6 +73,7 @@
         android:orientation="horizontal"
         android:id="@+id/filter"
         android:padding="20dp"
+        android:visibility="gone"
         app:layout_constraintTop_toBottomOf="@id/tombol_menu"
         app:layout_constraintStart_toStartOf="parent">
 

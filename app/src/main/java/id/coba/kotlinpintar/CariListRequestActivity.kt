@@ -257,9 +257,9 @@ class CariListRequestActivity : AppCompatActivity() , View.OnClickListener {
                     "FROM request_linen A " +
                     "JOIN request_linen_detail B ON  A.no_request=B.no_request " +
                     "WHERE status_request='Pending' AND nama_ruangan like '%" + text + "%' " +
-                    "OR A.no_request like '%" + text + "%' " +
+                    "AND (A.no_request like '%" + text + "%' " +
                     "OR requestor like '%" + text + "%' " +
-                    "OR jenis like '%" + text + "%' ORDER BY A.timestamp ASC",
+                    "OR jenis like '%" + text + "%') ORDER BY A.timestamp ASC",
              null)
         val ii = 0
         songsList.clear()

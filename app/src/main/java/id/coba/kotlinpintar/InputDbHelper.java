@@ -35,6 +35,7 @@ public class InputDbHelper extends SQLiteOpenHelper {
 
     public static final String TABLE_BERSIH = "linen_bersih";
     public static final String TOTAL_BERAT = "total_berat";
+    public static final String TOTAL_BERAT_REAL = "total_berat_real";
     public static final String TOTAL_QTY = "total_qty";
     public static final String KATEGORI = "kategori";
 
@@ -97,6 +98,10 @@ public class InputDbHelper extends SQLiteOpenHelper {
     public static final String EMAIL = "email";
     public static final String TOKEN = "token";
 
+    public static final String TABLE_INFEKSIUS = "tb_infeksius";
+    public static final String NAMA_INFEKSIUS = "infeksius";
+    public static final String ID_INFEKSIUS = "id_infeksius";
+
 
     public InputDbHelper(Context context) {
         super(context, InputContract.DB_NAME, null, InputContract.DB_VERSION);
@@ -113,7 +118,9 @@ public class InputDbHelper extends SQLiteOpenHelper {
                 InputContract.TaskEntry.SYNC + " TEXT NOT NULL DEFAULT 0, " +
                 InputContract.TaskEntry.PIC + " TEXT NOT NULL, " +
                 KATEGORI + " TEXT NOT NULL, " +
+                JENIS_INFEKSIUS + " TEXT NOT NULL, " +
                 TOTAL_BERAT + " TEXT NOT NULL DEFAULT 0, " +
+                TOTAL_BERAT_REAL + " TEXT NOT NULL DEFAULT 0, " +
                 TOTAL_QTY + " TEXT NOT NULL DEFAULT 0, " +
                 InputContract.TaskEntry.CURRENT_INSERT +  " DEFAULT CURRENT_TIMESTAMP " + ")";
 
@@ -272,6 +279,12 @@ public class InputDbHelper extends SQLiteOpenHelper {
                 KATEGORI + " TEXT NOT NULL " + ")";
         db.execSQL(createTableKategori);
 
+        String createTableInfeksius = "CREATE TABLE IF NOT EXISTS " + TABLE_INFEKSIUS
+                + "    ( " +
+                ID_INFEKSIUS + " INTEGER PRIMARY KEY, " +
+                NAMA_INFEKSIUS + " TEXT NOT NULL " + ")";
+        db.execSQL(createTableInfeksius);
+
         String createTableSetting = "CREATE TABLE IF NOT EXISTS " + TABLE_SETTING
                 + "    ( " +
                 BASE_URL + " TEXT NOT NULL, " +
@@ -309,6 +322,7 @@ public class InputDbHelper extends SQLiteOpenHelper {
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_BERSIH);
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_BERSIH_DETAIL);
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_KATEGORI);
+        db.execSQL("DROP TABLE IF EXISTS " + TABLE_INFEKSIUS);
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_KELUAR);
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_KELUAR_DETAIL);
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_RUSAK);
@@ -492,7 +506,7 @@ public class InputDbHelper extends SQLiteOpenHelper {
         return db.rawQuery(selectQuery, null);
     }
     public Cursor deleteRequest() {
-        String selectQuery = "DELETE FROM " + TABLE_REQUEST + " WHERE  julianday(timestamp) - julianday('now', 'localtime')  > -7 " ;
+        String selectQuery = "DELETE FROM " + TABLE_REQUEST + " WHERE  julianday(timestamp) - julianday('now', 'localtime')  > -30 " ;
         SQLiteDatabase db = this.getWritableDatabase();
         return db.rawQuery(selectQuery, null);
     }
@@ -619,6 +633,11 @@ public class InputDbHelper extends SQLiteOpenHelper {
         SQLiteDatabase db = this.getReadableDatabase();
         return db.rawQuery(selectQuery, null);
     }
+    public Cursor getInfeksiusCursor() {
+        String selectQuery = "SELECT id_infeksius as _id,* FROM " + TABLE_INFEKSIUS ;
+        SQLiteDatabase db = this.getReadableDatabase();
+        return db.rawQuery(selectQuery, null);
+    }
 
     public Cursor getJenisBarang() {
         String selectQuery = "SELECT id_jenis as _id,* FROM " + TABLE_JENIS_BARANG ;
@@ -683,6 +702,16 @@ public class InputDbHelper extends SQLiteOpenHelper {
                 NAMA_RUANGAN + " TEXT NOT NULL " + ")";
         db.execSQL(createTableRuangan);
     }
+
+    public void createInfeksius(){
+        SQLiteDatabase db = this.getWritableDatabase();
+        String createTableInfeksius = "CREATE TABLE IF NOT EXISTS " + TABLE_INFEKSIUS
+                + "    ( " +
+                ID_INFEKSIUS + " INTEGER PRIMARY KEY, " +
+                NAMA_INFEKSIUS + " TEXT NOT NULL " + ")";
+        db.execSQL(createTableInfeksius);
+    }
+
     public void createNotifikasi(){
         SQLiteDatabase db = this.getWritableDatabase();
         String createTableNotifikasi = "CREATE TABLE IF NOT EXISTS " + TABLE_NOTIFIKASI
@@ -736,8 +765,8 @@ public class InputDbHelper extends SQLiteOpenHelper {
 
         ContentValues values_header = new ContentValues();
 
-        values_header.put(BASE_URL,   "http://www.demo.sachiagroup.com/api/");
-        values_header.put(WEB_URL,   "https://www.demo.sachiagroup.com/");
+        values_header.put(BASE_URL,   "https://rasb.co.id/api/");
+        values_header.put(WEB_URL,   "https://rasb.co.id/");
         db.insertWithOnConflict(TABLE_SETTING,null,values_header, SQLiteDatabase.CONFLICT_IGNORE);
     }
 
@@ -767,7 +796,8 @@ public class InputDbHelper extends SQLiteOpenHelper {
 
     public void alterTabel(){
         SQLiteDatabase db = this.getWritableDatabase();
-        db.execSQL("DROP TABLE IF EXISTS " + TABLE_NOTIFIKASI);
+        db.execSQL("DROP TABLE IF EXISTS " + InputContract.TaskEntry.TABLE);
+        db.execSQL("DROP TABLE IF EXISTS " + InputContract.TaskEntry.TABLE_DETAIL);
 //        db.execSQL("ALTER TABLE " + TABLE_NOTIFIKASI  +
 //                " ADD "+ PAGE_URL + " TEXT DEFAULT '' ");
 //        db.execSQL("ALTER TABLE " + TABLE_REQUEST_DETAIL  +
@@ -820,6 +850,35 @@ public class InputDbHelper extends SQLiteOpenHelper {
                 ID_USER+ " INTEGER PRIMARY KEY, " +
                 NAMA_USER + " TEXT NOT NULL " + ")";
         db.execSQL(createTableRuangan);
+    }
+
+    public void createLinenKotor(){
+        SQLiteDatabase db = this.getWritableDatabase();
+        String createTable = "CREATE TABLE IF NOT EXISTS " + InputContract.TaskEntry.TABLE + "    ( " +
+                InputContract.TaskEntry._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                NO_TRANSAKSI + " TEXT NOT NULL, " +
+                InputContract.TaskEntry.TANGGAL + " DATE NOT NULL, " +
+                InputContract.TaskEntry.STATUS + " TEXT NOT NULL DEFAULT 0, " +
+                InputContract.TaskEntry.SYNC + " TEXT NOT NULL DEFAULT 0, " +
+                InputContract.TaskEntry.PIC + " TEXT NOT NULL, " +
+                KATEGORI + " TEXT NOT NULL, " +
+                JENIS_INFEKSIUS + " TEXT NOT NULL, " +
+                TOTAL_BERAT + " TEXT NOT NULL DEFAULT 0, " +
+                TOTAL_QTY + " TEXT NOT NULL DEFAULT 0, " +
+                InputContract.TaskEntry.CURRENT_INSERT +  " DEFAULT CURRENT_TIMESTAMP " + ")";
+
+
+        db.execSQL(createTable);
+        String createTableDetail = "CREATE TABLE IF NOT EXISTS " + InputContract.TaskEntry.TABLE_DETAIL
+                + "    ( " +
+                InputContract.TaskEntry._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                NO_TRANSAKSI + " TEXT NOT NULL, " +
+                InputContract.TaskEntry.EPC + " TEXT NOT NULL, " +
+                InputContract.TaskEntry.ITEM + " TEXT NOT NULL, " +
+                InputContract.TaskEntry.ROOM + " TEXT NOT NULL, " +
+                InputContract.TaskEntry.CURRENT_INSERT +  " DEFAULT CURRENT_TIMESTAMP "+ ")";
+
+        db.execSQL(createTableDetail);
     }
 
     public void createLinenBersih(){

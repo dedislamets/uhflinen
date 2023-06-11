@@ -3,6 +3,7 @@ package id.coba.kotlinpintar
 import android.app.Activity
 import android.app.DatePickerDialog
 import android.content.ContentValues
+import android.content.Context
 import android.content.Intent
 import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
@@ -95,7 +96,7 @@ class ListBersihActivity : AppCompatActivity() , View.OnClickListener {
         btnhistory.setOnClickListener(View.OnClickListener {
             startActivity(Intent(this,ListHistoryBersihActivity::class.java))
         })
-
+        syncData(this)
         updateUI()
 //        toolbar = findViewById(R.id.toolbar)
 //        setSupportActionBar(toolbar)
@@ -204,6 +205,96 @@ class ListBersihActivity : AppCompatActivity() , View.OnClickListener {
         }
     }
 
+    fun syncData(context: Context, startFlag : Boolean = false) {
+        val stringReq = StringRequest(
+            Request.Method.GET, ApiClient.BASE_URL +"linen_bersih",
+            Response.Listener<String> { response ->
+                var jsonObject: JSONObject = JSONObject(response)
+                var status_kirim : String = jsonObject.getString("status")
+                val db = mHelper.getWritableDatabase()
+                var cursor_del : Cursor = mHelper.deleteBersih()
+                cursor_del.moveToFirst()
+                cursor_del.close()
+                if (status_kirim.equals("true")){
+                    var jsonArray: JSONArray = jsonObject.getJSONArray("data")
+                    var jsonArray_detail: JSONArray = jsonObject.getJSONArray("data_detail")
+
+                    for (i in 0 until jsonArray.length()) {
+                        val item = jsonArray.getJSONObject(i)
+                        var no_transaksi : String = item.getString("NO_TRANSAKSI")
+                        var tgl : String = item.getString("TANGGAL")
+                        var pic : String = item.getString("PIC")
+                        var kategori : String = item.getString("KATEGORI")
+                        var qty : String = item.getString("TOTAL_QTY")
+                        var berat : String = item.getString("TOTAL_BERAT")
+                        var status : String = item.getString("STATUS")
+                        var current_insert : String = item.getString("CURRENT_INSERT")
+
+
+                        var cursor : Cursor =  mHelper.getBersih(no_transaksi)
+                        if (!cursor.moveToFirst()) {
+                            val values_header  = ContentValues()
+
+                            values_header.put(InputContract.TaskEntry.NO_TRANSAKSI,   no_transaksi)
+                            values_header.put(InputContract.TaskEntry.TANGGAL,   tgl)
+                            values_header.put(InputContract.TaskEntry.STATUS,   status)
+                            values_header.put(InputContract.TaskEntry.SYNC,   1)
+                            values_header.put(InputContract.TaskEntry.PIC,   pic)
+                            values_header.put(KATEGORI,   kategori)
+                            values_header.put(InputDbHelper.TOTAL_QTY,   qty)
+                            values_header.put(InputDbHelper.TOTAL_BERAT,   berat)
+                            values_header.put(InputContract.TaskEntry.CURRENT_INSERT,   current_insert)
+
+                            db.insertWithOnConflict(InputDbHelper.TABLE_BERSIH, null, values_header, SQLiteDatabase.CONFLICT_FAIL)
+
+                        }
+
+
+                    }
+
+                    for (i in 0 until jsonArray_detail.length()) {
+                        val item_detail = jsonArray_detail.getJSONObject(i)
+                        var no_transaksi : String = item_detail.getString("no_transaksi")
+                        var epc : String = item_detail.getString("epc")
+                        var ruangan : String = item_detail.getString("ruangan")
+                        var barang : String = item_detail.getString("item")
+                        var status_linen : String = item_detail.getString("status_linen")
+                        var keluar : String = item_detail.getString("keluar")
+                        var current_insert : String = item_detail.getString("CURRENT_INSERT")
+
+
+                        val db = mHelper.getWritableDatabase()
+                        val values  = ContentValues()
+
+                        var cursor_del : Cursor = mHelper.deleteDetailEpcBersih(no_transaksi,epc)
+                        cursor_del.moveToFirst()
+                        cursor_del.close()
+
+                        var cursor : Cursor =  mHelper.getDetailEpcBersih(no_transaksi,epc)
+                        if (!cursor.moveToFirst()) {
+                            values.put(InputContract.TaskEntry.NO_TRANSAKSI,   no_transaksi)
+                            values.put(InputContract.TaskEntry.EPC,   epc)
+                            values.put(InputContract.TaskEntry.ITEM,   barang)
+                            values.put(InputContract.TaskEntry.ROOM,   ruangan)
+                            values.put(InputDbHelper.STATUS_LINEN,   status_linen)
+                            values.put(InputDbHelper.KELUAR,   keluar)
+                            values.put(InputDbHelper.BERAT,   item_detail.getString("berat"))
+                            values.put(InputDbHelper.CHECKED,   item_detail.getString("checked"))
+                            values.put(InputContract.TaskEntry.CURRENT_INSERT,   current_insert)
+
+                            db.insertWithOnConflict(InputDbHelper.TABLE_BERSIH_DETAIL, null, values, SQLiteDatabase.CONFLICT_FAIL)
+                        }
+
+                    }
+
+                    Toast.makeText(context,"Sync Tabel Linen Bersih sukses", Toast.LENGTH_SHORT).show()
+                }
+            },
+            Response.ErrorListener { Toast.makeText(context, "Gagal terhubung ke server", Toast.LENGTH_SHORT).show() })
+        val requestQueue = Volley.newRequestQueue(context)
+        requestQueue.add(stringReq)
+
+    }
 
 
 }

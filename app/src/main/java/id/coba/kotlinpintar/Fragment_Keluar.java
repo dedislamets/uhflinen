@@ -7,6 +7,7 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Color;
@@ -14,7 +15,9 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 
+import android.text.Editable;
 import android.text.TextUtils;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
@@ -31,6 +34,7 @@ import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.GridView;
 import android.widget.ImageButton;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -99,12 +103,14 @@ public class Fragment_Keluar extends Fragment implements OnCheckedChangeListener
     private ImageButton btnReff ;
     private EditText edittext;
     private EditText noTransaksi;
+    private EditText txtScan;
     private EditText tgl;
     private EditText txtReferensi;
     private Spinner spinner_pic;
     private Spinner spinner_ruangan;
     private ArrayList<HashMap> listEpc;
     private ArrayList<HashMap> listRequest;
+    private LinearLayout lscan;
 
     private Set<String> epcSet = null ;
     //    private List<HashMap> listEpc = null;//EPC list
@@ -125,6 +131,8 @@ public class Fragment_Keluar extends Fragment implements OnCheckedChangeListener
     private Toolbar toolbar;
     private SimpleCursorAdapter adapterPIC ;
     private SimpleCursorAdapter adapterRuangan ;
+    private SharedPreferences prefMode;
+
     //handler
     private Handler handler = new Handler(){
         @Override
@@ -166,6 +174,12 @@ public class Fragment_Keluar extends Fragment implements OnCheckedChangeListener
                         listEpc.add(mapEpc);
                         hitungBerat(berat);
 
+                        for (HashMap num_req : listRequest) {
+                            if (item.equals(num_req.get("jenis"))) {
+                                num_req.put("ready",1);
+                            }
+                        }
+
                         adapter = new EPCKeluarAdapter(getActivity(), listEpc);
                         adapter_request = new KeluarRequestAdapter(getActivity(), listRequest, listEpc);
                         lvEpc.setAdapter(adapter);
@@ -174,7 +188,7 @@ public class Fragment_Keluar extends Fragment implements OnCheckedChangeListener
                         Util.play(1, 0);
                         KeluarActivity.mSetEpcs=epcSet;
                     }else{
-                        if (epcSet.contains(epc)) {//set already exit
+                        if (epcSet.contains(epc.replace("\n",""))) {//set already exit
 
                         }else{
                             mapEpc = new HashMap();
@@ -188,11 +202,16 @@ public class Fragment_Keluar extends Fragment implements OnCheckedChangeListener
 
                             listEpc.add(mapEpc);
 
+                            for (HashMap num_req : listRequest) {
+                                if (item.equals(num_req.get("jenis"))) {
+                                    num_req.put("ready",Integer.parseInt(num_req.get("ready").toString())+1);
+                                }
+                            }
 //                            adapter_request = new KeluarRequestAdapter(getActivity(), listRequest, listEpc);
 //                            lvRequest.setAdapter(adapter_request);
 
                             hitungBerat(berat);
-
+                            Util.play(1, 0);
                             KeluarActivity.mSetEpcs = epcSet;
                             if(System.currentTimeMillis() - lastTime > 100){
                                 lastTime = System.currentTimeMillis() ;
@@ -205,7 +224,7 @@ public class Fragment_Keluar extends Fragment implements OnCheckedChangeListener
 
                         adapter.notifyDataSetChanged();
                         adapter_request.notifyDataSetChanged();
-
+                        txtScan.setText("");
                     }
 
                     break ;
@@ -216,6 +235,7 @@ public class Fragment_Keluar extends Fragment implements OnCheckedChangeListener
     public View onCreateView(LayoutInflater inflater,
                              @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         view= inflater.inflate(R.layout.fragment_keluar, null);
+        prefMode = getContext().getSharedPreferences("MODE", Context.MODE_PRIVATE);
         initView();
 
 
@@ -250,6 +270,7 @@ public class Fragment_Keluar extends Fragment implements OnCheckedChangeListener
         txtReferensi= (EditText) view.findViewById(R.id.referensi);
         spinner_pic= view.findViewById(R.id.spinner_pic);
         spinner_ruangan= view.findViewById(R.id.spinner_ruangan);
+        lscan = (LinearLayout) view.findViewById(R.id.lscan) ;
 
         noTransaksi= (EditText) view.findViewById(R.id.no_transaksi);
         setAutoNumber();
@@ -266,6 +287,79 @@ public class Fragment_Keluar extends Fragment implements OnCheckedChangeListener
         btnSimpan.setOnClickListener(this);
         edittext.setOnClickListener(this);
         btnReff.setOnClickListener(this);
+        txtScan= (EditText) view.findViewById(R.id.textView_scan);
+        txtScan.setOnKeyListener(new View.OnKeyListener() {
+            @Override
+            public boolean onKey(View v, int keyCode, KeyEvent event) {
+                if ((keyCode == KeyEvent.KEYCODE_ENTER)) {
+                    String epc = txtScan.getText().toString().replace("\n","");
+                    Message msg = new Message();
+                    msg.what = 1;
+                    Bundle b = new Bundle();
+                    b.putString("epc", epc);
+
+                    try {
+                        SQLiteDatabase db = mHelper.getReadableDatabase();
+
+                        String selectQuery = "SELECT A.*,B.jenis,B.berat FROM " + TABLE_BARANG + " A JOIN " + TABLE_JENIS_BARANG + " B ON A.ID_JENIS=B.ID_JENIS WHERE serial='" + epc + "'";
+                        Cursor cursor_header = db.rawQuery(selectQuery, null);
+
+                        String berat = "0";
+                        String jenis = "";
+                        b.putString("exist", "0");
+
+                        int count = cursor_header.getCount();
+                        if (count > 0) {
+                            while (cursor_header.moveToNext()) {
+                                String ruangan = cursor_header.getString(cursor_header.getColumnIndex(InputDbHelper.NAMA_RUANGAN));
+                                jenis = cursor_header.getString(cursor_header.getColumnIndex(InputDbHelper.JENIS));
+                                berat = cursor_header.getString(cursor_header.getColumnIndex(InputDbHelper.BERAT));
+
+                                b.putString("rssi", ruangan);
+                                b.putString("item", jenis);
+                                b.putString("berat", berat);
+
+                                String exist = "";
+//                                selectQuery = "SELECT b.* FROM linen_keluar a " +
+//                                        "JOIN linen_keluar_detail b ON a.transaksi=b.transaksi " +
+//                                        "WHERE a.status=0 and epc='" + epc +"' AND a.transaksi<>'" + noTransaksi.getText().toString() + "'";
+//                                Cursor cursor_exist = db.rawQuery(selectQuery, null);
+//                                while (cursor_exist.moveToNext()) {
+//                                    exist = "1";
+//                                }
+
+                                InputDbHelper db_store = new InputDbHelper(getActivity());
+                                Cursor cursor_exist_bersih = db_store.getLastHistory(epc);
+                                while (cursor_exist_bersih.moveToNext()) {
+                                    int i_status = cursor_exist_bersih.getColumnIndex("FLAG");
+
+                                    String status = cursor_exist_bersih.getString(i_status);
+                                    if (status.equals("keluar")) {
+                                        exist = "1";
+                                    }
+                                }
+                                b.putString("exist", exist);
+                            }
+                        } else {
+                            b.putString("rssi", "-");
+                            b.putString("item", "Tidak Terdaftar!");
+                            b.putString("berat", "0");
+                        }
+                        msg.setData(b);
+                        handler.sendMessage(msg);
+                    } catch (Exception ex) {
+                    }
+                }
+                return false;
+            }
+        });
+
+        if(prefMode.getBoolean("MODE", false) == true){
+            lscan.setVisibility(View.GONE);
+            btnStart.setEnabled(true);
+        }else{
+            btnStart.setEnabled(false);
+        }
 
         mHelper = new InputDbHelper(getActivity());
         tvTagSumBerat.setText("0");
@@ -380,22 +474,25 @@ public class Fragment_Keluar extends Fragment implements OnCheckedChangeListener
 
                             SQLiteDatabase db = mHelper.getReadableDatabase();
 
-                            String selectQuery = "SELECT A.*,B.jenis,B.berat FROM " + TABLE_BARANG + " A JOIN " + TABLE_JENIS_BARANG + " B ON A.ID_JENIS=B.ID_JENIS WHERE serial=" + epc;
+                            String selectQuery = "SELECT A.*,B.jenis,B.berat FROM " + TABLE_BARANG + " A JOIN " + TABLE_JENIS_BARANG + " B ON A.ID_JENIS=B.ID_JENIS WHERE serial='" + epc + "'";
                             Cursor cursor_header = db.rawQuery(selectQuery, null);
 
                             String berat = "0";
                             String jenis = "";
                             b.putString("exist", "0");
-                            while (cursor_header.moveToNext()) {
-                                String ruangan = cursor_header.getString(cursor_header.getColumnIndex(InputDbHelper.NAMA_RUANGAN));
-                                jenis = cursor_header.getString(cursor_header.getColumnIndex(InputDbHelper.JENIS));
-                                berat = cursor_header.getString(cursor_header.getColumnIndex(InputDbHelper.BERAT));
 
-                                b.putString("rssi", ruangan);
-                                b.putString("item", jenis);
-                                b.putString("berat", berat);
+                            int count = cursor_header.getCount();
+                            if (count > 0) {
+                                while (cursor_header.moveToNext()) {
+                                    String ruangan = cursor_header.getString(cursor_header.getColumnIndex(InputDbHelper.NAMA_RUANGAN));
+                                    jenis = cursor_header.getString(cursor_header.getColumnIndex(InputDbHelper.JENIS));
+                                    berat = cursor_header.getString(cursor_header.getColumnIndex(InputDbHelper.BERAT));
 
-                                String exist = "";
+                                    b.putString("rssi", ruangan);
+                                    b.putString("item", jenis);
+                                    b.putString("berat", berat);
+
+                                    String exist = "";
 //                                selectQuery = "SELECT b.* FROM linen_keluar a " +
 //                                        "JOIN linen_keluar_detail b ON a.transaksi=b.transaksi " +
 //                                        "WHERE a.status=0 and epc='" + epc +"' AND a.transaksi<>'" + noTransaksi.getText().toString() + "'";
@@ -404,19 +501,23 @@ public class Fragment_Keluar extends Fragment implements OnCheckedChangeListener
 //                                    exist = "1";
 //                                }
 
-                                InputDbHelper db_store = new InputDbHelper(getActivity());
-                                Cursor cursor_exist_bersih = db_store.getLastHistory( epc);
-                                while (cursor_exist_bersih.moveToNext()) {
-                                    int i_status = cursor_exist_bersih.getColumnIndex("FLAG");
+                                    InputDbHelper db_store = new InputDbHelper(getActivity());
+                                    Cursor cursor_exist_bersih = db_store.getLastHistory(epc);
+                                    while (cursor_exist_bersih.moveToNext()) {
+                                        int i_status = cursor_exist_bersih.getColumnIndex("FLAG");
 
-                                    String status = cursor_exist_bersih.getString(i_status);
-                                    if(status.equals("keluar")){
-                                        exist = "1";
+                                        String status = cursor_exist_bersih.getString(i_status);
+                                        if (status.equals("keluar")) {
+                                            exist = "1";
+                                        }
                                     }
+                                    b.putString("exist", exist);
                                 }
-                                b.putString("exist", exist);
+                            }else{
+                                b.putString("rssi", "-");
+                                b.putString("item", "Tidak Terdaftar!");
+                                b.putString("berat", "0");
                             }
-
                             msg.setData(b);
                             handler.sendMessage(msg);
                         }
@@ -447,20 +548,22 @@ public class Fragment_Keluar extends Fragment implements OnCheckedChangeListener
         if (keyControl) {
             keyControl = false;
             if (!isStart) {
-                KeluarActivity.mUhfrManager.setCancleInventoryFilter();
-                isRunning = true;
-                if (isMulti) {
-                    KeluarActivity.mUhfrManager.setFastMode();
-                    KeluarActivity.mUhfrManager.asyncStartReading();
-                }else {
-                    KeluarActivity.mUhfrManager.setCancleFastMode();
+                if(KeluarActivity.mUhfrManager == null){
+                    showToast("Fungsi ini berlaku hanya untuk handheld");
+                }else{
+                    KeluarActivity.mUhfrManager.setCancleInventoryFilter();
+                    isRunning = true;
+                    if (isMulti) {
+                        KeluarActivity.mUhfrManager.setFastMode();
+                        KeluarActivity.mUhfrManager.asyncStartReading();
+                    }else {
+                        KeluarActivity.mUhfrManager.setCancleFastMode();
+                    }
+                    new Thread(inventoryTask).start();
+                    btnStart.setText(getResources().getString(R.string.stop_inventory_epc));
+                    isStart = true;
                 }
-                new Thread(inventoryTask).start();
-//                checkMulti.setClickable(false);
-//                checkMulti.setTextColor(Color.GRAY);
-                btnStart.setText(getResources().getString(R.string.stop_inventory_epc));
-//            Log.e("inventoryTask", "start inventory") ;
-                isStart = true;
+
             } else {
 //                checkMulti.setClickable(true);
 //                checkMulti.setTextColor(Color.BLACK);
@@ -521,14 +624,22 @@ public class Fragment_Keluar extends Fragment implements OnCheckedChangeListener
 
                 if(txtReferensi.getText().toString() != ""){
                     Boolean exist_req = false;
+                    Boolean limit_req = false;
                     if(listRequest != null) {
                         for (HashMap num_req : listRequest) {
-                            if (Integer.parseInt(num_req.get("ready").toString()) > 0) {
+                            if (Integer.parseInt(num_req.get("ready").toString()) == 0) {
                                 exist_req = true;
+                            }
+                            if (Integer.parseInt(num_req.get("ready").toString()) > Integer.parseInt(num_req.get(QTY).toString())) {
+                                limit_req = true;
                             }
                         }
                         if (exist_req) {
                             Toast.makeText(getActivity(), "List Request min ready > 0 .!", Toast.LENGTH_SHORT).show();
+                            break;
+                        }
+                        if(limit_req){
+                            Toast.makeText(getActivity(),"List Scan tidak boleh melebihi list request.!",Toast.LENGTH_SHORT).show();
                             break;
                         }
                     }
@@ -684,6 +795,8 @@ public class Fragment_Keluar extends Fragment implements OnCheckedChangeListener
                     do {
                         saveDetail(
                                 cursor_detail.getString(cursor_detail.getColumnIndex(InputContract.TaskEntry.NO_TRANSAKSI)),
+                                cursor.getString(cursor.getColumnIndex(NO_REFERENSI)),
+                                cursor.getString(cursor.getColumnIndex(NAMA_RUANGAN)),
                                 cursor_detail.getString(cursor_detail.getColumnIndex(InputContract.TaskEntry.EPC))
                         );
                     } while (cursor_detail.moveToNext());
@@ -734,7 +847,7 @@ public class Fragment_Keluar extends Fragment implements OnCheckedChangeListener
         VolleySingleton.getInstance(getActivity()).addToRequestQueue(stringRequest);
     }
 
-    private void saveDetail(final String no_transaksi, final String epc) {
+    private void saveDetail(final String no_transaksi,final String no_referensi, final String ruangan, final String epc) {
         StringRequest stringRequest = new StringRequest(Request.Method.POST, BASE_URL+ "linen_keluar_detail",
                 new Response.Listener<String>() {
                     @Override
@@ -757,6 +870,8 @@ public class Fragment_Keluar extends Fragment implements OnCheckedChangeListener
             protected Map<String, String> getParams() throws AuthFailureError {
                 Map<String, String> params = new HashMap<>();
                 params.put("no_transaksi", no_transaksi);
+                params.put("no_referensi", no_referensi);
+                params.put("ruangan", ruangan);
                 params.put("epc", epc);
                 return params;
             }
@@ -815,14 +930,16 @@ public class Fragment_Keluar extends Fragment implements OnCheckedChangeListener
         while (cursor_header.moveToNext()) {
             int id_jenis = cursor_header.getColumnIndex(JENIS);
             int id_qty = cursor_header.getColumnIndex(QTY);
+            int id_ready = cursor_header.getColumnIndex(READY);
 
             String jenis = cursor_header.getString(id_jenis);
             String qty = cursor_header.getString(id_qty);
+            String ready = cursor_header.getString(id_ready);
 
             mapEpc = new HashMap();
             mapEpc.put(JENIS, jenis);
             mapEpc.put(QTY, qty);
-            mapEpc.put("ready", 0);
+            mapEpc.put("ready", ready);
             listRequest.add(mapEpc);
         }
 
@@ -920,23 +1037,26 @@ public class Fragment_Keluar extends Fragment implements OnCheckedChangeListener
             tb += litersOfPetrol;
             tvTagSum.setText( String.valueOf(i) );
 
-            selectQuery = "SELECT * " +
-                    "FROM " + TABLE_REQUEST_DETAIL + " A " +
-                    "WHERE "+ NO_REQUEST +"='" + txtReferensi.getText() +
-                    "' AND "+ JENIS +"='" + barang + "'";
-            Cursor cursor_request = db.rawQuery(selectQuery, null);
-            while (cursor_request.moveToNext()) {
-                int idqty = cursor_request.getColumnIndex(QTY);
-                int idready = cursor_request.getColumnIndex(READY);
-                String qty = cursor_request.getString(idqty);
-                Integer ready = cursor_request.getInt(idready);
 
-                mapEpc = new HashMap();
-                mapEpc.put(JENIS, barang);
-                mapEpc.put(QTY, qty);
-                mapEpc.put("ready", 0);
-                listRequest.add(mapEpc);
-            }
+        }
+
+        selectQuery = "SELECT * " +
+                "FROM " + TABLE_REQUEST_DETAIL + " A " +
+                "WHERE "+ NO_REQUEST +"='" + txtReferensi.getText() + "'";
+        Cursor cursor_request = db.rawQuery(selectQuery, null);
+        while (cursor_request.moveToNext()) {
+            int idqty = cursor_request.getColumnIndex(QTY);
+            int idready = cursor_request.getColumnIndex(READY);
+            int idjenis = cursor_request.getColumnIndex(JENIS);
+            String barang = cursor_request.getString(idjenis);
+            String qty = cursor_request.getString(idqty);
+            Integer ready = cursor_request.getInt(idready);
+
+            mapEpc = new HashMap();
+            mapEpc.put(JENIS, barang);
+            mapEpc.put(QTY, qty);
+            mapEpc.put("ready", ready);
+            listRequest.add(mapEpc);
         }
 
         tvTagSumBerat.setText( String.format("%.1f", tb) );
@@ -988,7 +1108,10 @@ public class Fragment_Keluar extends Fragment implements OnCheckedChangeListener
         allCount = 0 ;
         tvTagSum.setText("0");
         tvTagSumBerat.setText("0");
-        KeluarActivity.mSetEpcs.clear();
+        if(KeluarActivity.mSetEpcs != null){
+            KeluarActivity.mSetEpcs.clear();
+        }
+
 //        lvEpc.removeAllViews();
     }
 

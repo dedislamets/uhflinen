@@ -253,14 +253,14 @@ class ListRusakActivity : AppCompatActivity() , View.OnClickListener {
                 val stringReq = StringRequest(Request.Method.GET, BASE_URL +"linen_rusak",
                     Response.Listener<String> { response ->
                         var jsonObject: JSONObject = JSONObject(response)
+                        val db = mHelper.getWritableDatabase()
                         var status_kirim : String = jsonObject.getString("status")
-                        var jsonArray: JSONArray = jsonObject.getJSONArray("data")
-                        var jsonArray_detail: JSONArray = jsonObject.getJSONArray("data_detail")
+                        var cursor_del : Cursor = mHelper.deleteRusak()
+                        cursor_del.moveToFirst()
+                        cursor_del.close()
                         if (status_kirim.equals("true")){
-                            val db = mHelper.getWritableDatabase()
-                            var cursor_del : Cursor = mHelper.deleteRusak()
-                            cursor_del.moveToFirst()
-                            cursor_del.close()
+                            var jsonArray: JSONArray = jsonObject.getJSONArray("data")
+                            var jsonArray_detail: JSONArray = jsonObject.getJSONArray("data_detail")
                             for (i in 0 until jsonArray.length()) {
                                 val item = jsonArray.getJSONObject(i)
                                 var no_transaksi : String = item.getString("NO_TRANSAKSI")
@@ -325,6 +325,12 @@ class ListRusakActivity : AppCompatActivity() , View.OnClickListener {
                             startActivity(getIntent())
                             overridePendingTransition(0, 0)
                             Toast.makeText(this,"Sync Tabel Linen Rusak sukses", Toast.LENGTH_SHORT).show()
+                        }else{
+                            finish()
+                            overridePendingTransition(0, 0)
+                            startActivity(getIntent())
+                            overridePendingTransition(0, 0)
+                            Toast.makeText(this,"Tidak ada data terbaru!", Toast.LENGTH_SHORT).show()
                         }
                     },
                     Response.ErrorListener { Toast.makeText(this, "Gagal terhubung ke server", Toast.LENGTH_SHORT).show() })

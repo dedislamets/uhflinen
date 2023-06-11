@@ -4,10 +4,12 @@ import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Bundle
+import android.os.Handler
+import android.os.Message
+import android.view.LayoutInflater
+import android.view.View
 import android.webkit.WebView
-import android.widget.ListView
-import android.widget.RelativeLayout
-import android.widget.TextView
+import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import id.coba.kotlinpintar.InputDbHelper.*
 import java.util.ArrayList
@@ -24,6 +26,9 @@ class ActivityNotification : AppCompatActivity() {
     private val notifList = ArrayList<HashMap<String, String>>()
     private lateinit var pref : SharedPreferences
     private lateinit var webView: WebView
+    private lateinit var mHandler: Handler
+    private lateinit var ftView: View
+    private var isLoading: Boolean = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -43,20 +48,48 @@ class ActivityNotification : AppCompatActivity() {
 
         list.setOnItemClickListener { parent, view, position, id ->
 
-            val intentBiasa = Intent(this, Activity_Webview::class.java)
+            val intentBiasa = Intent(this, Activity_Inspeksi::class.java)
             val selectedFromList = parent.getItemAtPosition(position)
             var vi = view
             val id = vi.findViewById(R.id.id_notifikasi) as TextView
             val page_url = vi.findViewById(R.id.page_url) as TextView
+
             mHelper.updateSudahDibaca(Integer.parseInt(id.text.toString()))
             adapter.notifyDataSetChanged()
             val b = Bundle()
             b.putString(PAGE_URL, page_url.text.toString())
+            if(page_url.text == "pengawasan/penilaian"){
+                b.putString("title", "")
+            }else{
+                b.putString("title", "Form Penerimaan Linen")
+            }
+
             intentBiasa.putExtras(b)
             startActivity(intentBiasa)
             finish()
 
         }
+        list.setOnScrollListener(object : AbsListView.OnScrollListener{
+            var VisibleItem: Int = 0
+            override fun onScroll(p0: AbsListView?, FirstVisibleItem: Int, i2: Int, i3: Int) {
+
+                if(VisibleItem < FirstVisibleItem)
+                {
+//                    Toast.makeText(applicationContext,"Scrolling Down",Toast.LENGTH_SHORT).show()
+                }
+                if(VisibleItem >FirstVisibleItem)
+                {
+//                    Toast.makeText(applicationContext,"Scrolling Up",Toast.LENGTH_SHORT).show()
+                }
+                    VisibleItem=FirstVisibleItem
+
+            }
+            override fun onScrollStateChanged(p0: AbsListView?, p1: Int) {
+//                updateUI()
+            }
+        })
+
+
         updateUI()
     }
     private fun isLogin(): Boolean {
@@ -135,4 +168,6 @@ class ActivityNotification : AppCompatActivity() {
         cursor_header.close()
         db.close()
     }
+
 }
+

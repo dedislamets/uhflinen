@@ -78,7 +78,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             startActivity(intentBiasa1)
         }
 
-        getSupportActionBar()?.setTitle("UHF Reader V1.0")
+        getSupportActionBar()?.setTitle("UHF Reader V1.2")
         btnGoal = findViewById(R.id.LayoutGoal)
         btnFinance = findViewById(R.id.LayoutFinance)
         btnPromise = findViewById(R.id.LayoutPromise)
@@ -97,10 +97,10 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         layout2 = findViewById(R.id.lay2)
         layout3 = findViewById(R.id.lay3)
 
-        nama_user.setText(pref.getString(NAMA_USER, "Nama User"))
+        nama_user.setText(pref.getString(NAMA_USER, "Nama User") )
         department.setText(pref.getString(DEPARTMENT, "Bagian"))
 
-      btnNavigation = findViewById(R.id.bottomNavigationView)
+        btnNavigation = findViewById(R.id.bottomNavigationView)
         var menu : Menu = btnNavigation.menu
         btnNavigation.setOnNavigationItemSelectedListener {
                 item: MenuItem ->  selectedMenu(item)
@@ -141,7 +141,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         btnSoal.setOnClickListener(this)
 
         mHelper = InputDbHelper(this)
-
+        syncNotifikasi()
         var cursor : Cursor =  mHelper.getSetting()
         if (cursor.moveToFirst()) {
             val url = cursor.getString(cursor.getColumnIndex(BASE_URL))
@@ -339,7 +339,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
     private fun syncNotifikasi(){
         val stringReq = StringRequest(
-            Request.Method.GET, ApiClient.BASE_URL +"notifikasi",
+            Request.Method.GET, ApiClient.BASE_URL +"notifikasi?id=" + pref.getInt(ID_USER, 0),
             Response.Listener<String> { response ->
                 var jsonObject: JSONObject = JSONObject(response)
                 var status_kirim : String = jsonObject.getString("status")

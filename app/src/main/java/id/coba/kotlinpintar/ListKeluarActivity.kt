@@ -120,6 +120,7 @@ class ListKeluarActivity : AppCompatActivity() , View.OnClickListener {
         registerReceiver(broadCastReceiver,IntentFilter(DATA_SAVED_BROADCAST))
         registerReceiver(SyncKeluarState(), IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION))
         syncData()
+        syncDataRequest()
     }
     private val broadCastReceiver = object : BroadcastReceiver() {
         override fun onReceive(contxt: Context?, intent: Intent?) {
@@ -251,15 +252,14 @@ class ListKeluarActivity : AppCompatActivity() , View.OnClickListener {
                     Response.Listener<String> { response ->
                         var jsonObject: JSONObject = JSONObject(response)
                         var status_kirim : String = jsonObject.getString("status")
-                        var jsonArray: JSONArray = jsonObject.getJSONArray("data")
-                        var jsonArray_detail: JSONArray = jsonObject.getJSONArray("data_detail")
+                        val db = mHelper.getWritableDatabase()
+
+                        var cursor_del : Cursor = mHelper.deleteKeluar()
+                        cursor_del.moveToFirst()
+                        cursor_del.close()
                         if (status_kirim.equals("true")){
-                            val db = mHelper.getWritableDatabase()
-
-                            var cursor_del : Cursor = mHelper.deleteKeluar()
-                            cursor_del.moveToFirst()
-                            cursor_del.close()
-
+                            var jsonArray: JSONArray = jsonObject.getJSONArray("data")
+                            var jsonArray_detail: JSONArray = jsonObject.getJSONArray("data_detail")
                             for (i in 0 until jsonArray.length()) {
                                 val item = jsonArray.getJSONObject(i)
                                 var no_transaksi : String = item.getString("NO_TRANSAKSI")
@@ -324,6 +324,12 @@ class ListKeluarActivity : AppCompatActivity() , View.OnClickListener {
                             startActivity(getIntent())
                             overridePendingTransition(0, 0)
                             Toast.makeText(this,"Sync Tabel Linen Keluar sukses", Toast.LENGTH_SHORT).show()
+                        }else{
+                            finish()
+                            overridePendingTransition(0, 0)
+                            startActivity(getIntent())
+                            overridePendingTransition(0, 0)
+                            Toast.makeText(this,"Tidak ada data terbaru!", Toast.LENGTH_SHORT).show()
                         }
                     },
                     Response.ErrorListener { Toast.makeText(this, "Gagal terhubung ke server", Toast.LENGTH_SHORT).show() })
@@ -334,19 +340,100 @@ class ListKeluarActivity : AppCompatActivity() , View.OnClickListener {
     }
 
     fun syncData(){
+        val stringReq = StringRequest(Request.Method.GET, BASE_URL +"linen_keluar",
+            Response.Listener<String> { response ->
+                var jsonObject: JSONObject = JSONObject(response)
+                var status_kirim : String = jsonObject.getString("status")
+                val db = mHelper.getWritableDatabase()
+
+                var cursor_del : Cursor = mHelper.deleteKeluar()
+                cursor_del.moveToFirst()
+                cursor_del.close()
+                if (status_kirim.equals("true")){
+                    var jsonArray: JSONArray = jsonObject.getJSONArray("data")
+                    var jsonArray_detail: JSONArray = jsonObject.getJSONArray("data_detail")
+                    for (i in 0 until jsonArray.length()) {
+                        val item = jsonArray.getJSONObject(i)
+                        var no_transaksi : String = item.getString("NO_TRANSAKSI")
+                        var tgl : String = item.getString("TANGGAL")
+                        var nama_ruangan : String = item.getString("RUANGAN")
+                        var pic : String = item.getString("PIC")
+                        var no_referensi : String = item.getString("NO_REFERENSI")
+                        var status : String = item.getString("STATUS")
+                        var current_insert : String = item.getString("CURRENT_INSERT")
+
+
+                        var cursor : Cursor =  mHelper.getKeluar(no_transaksi)
+                        if (!cursor.moveToFirst()) {
+                            val values_header  = ContentValues()
+
+                            values_header.put(InputContract.TaskEntry.NO_TRANSAKSI,   no_transaksi)
+                            values_header.put(InputContract.TaskEntry.TANGGAL,   tgl)
+                            values_header.put(InputContract.TaskEntry.PIC,   pic)
+                            values_header.put(NAMA_RUANGAN,   nama_ruangan)
+                            values_header.put(NO_REFERENSI,   no_referensi)
+                            values_header.put(InputContract.TaskEntry.STATUS,   status)
+                            values_header.put(InputContract.TaskEntry.SYNC,   1)
+                            values_header.put(InputContract.TaskEntry.CURRENT_INSERT,   current_insert)
+
+                            db.insertWithOnConflict(TABLE_KELUAR, null, values_header, SQLiteDatabase.CONFLICT_FAIL)
+
+                        }
+
+
+                    }
+
+                    for (i in 0 until jsonArray_detail.length()) {
+                        val item_detail = jsonArray_detail.getJSONObject(i)
+                        var no_transaksi : String = item_detail.getString("no_transaksi")
+                        var epc : String = item_detail.getString("epc")
+                        var berat : String = item_detail.getString("berat")
+                        var barang : String = item_detail.getString("item")
+                        var current_insert : String = item_detail.getString("CURRENT_INSERT")
+
+                        val db = mHelper.getWritableDatabase()
+                        val values  = ContentValues()
+
+                        var cursor_del : Cursor = mHelper.deleteDetailEpcKeluar(no_transaksi,epc)
+                        cursor_del.moveToFirst()
+                        cursor_del.close()
+
+                        var cursor : Cursor =  mHelper.getDetailEpcKeluar(no_transaksi,epc)
+                        if (!cursor.moveToFirst()) {
+                            values.put(InputContract.TaskEntry.NO_TRANSAKSI,   no_transaksi)
+                            values.put(InputContract.TaskEntry.EPC,   epc)
+                            values.put(InputContract.TaskEntry.ITEM,   barang)
+                            values.put(BERAT,   berat)
+                            values.put(KOTOR,   item_detail.getString("kotor"))
+                            values.put(InputContract.TaskEntry.CURRENT_INSERT,   current_insert)
+
+                            db.insertWithOnConflict(TABLE_KELUAR_DETAIL, null, values, SQLiteDatabase.CONFLICT_FAIL)
+                        }
+
+                    }
+
+                    Toast.makeText(this,"Sync Tabel Linen Keluar sukses", Toast.LENGTH_SHORT).show()
+                }else{
+
+                    Toast.makeText(this,"Tidak ada data terbaru!", Toast.LENGTH_SHORT).show()
+                }
+            },
+            Response.ErrorListener { Toast.makeText(this, "Gagal terhubung ke server", Toast.LENGTH_SHORT).show() })
+        val requestQueue = Volley.newRequestQueue(this)
+        requestQueue.add(stringReq)
+    }
+    fun syncDataRequest(){
         val stringReq = StringRequest(Request.Method.GET, BASE_URL +"request_linen",
             Response.Listener<String> { response ->
                 var jsonObject: JSONObject = JSONObject(response)
                 var status_kirim : String = jsonObject.getString("status")
-                var jsonArray: JSONArray = jsonObject.getJSONArray("data")
-                var jsonArray_detail: JSONArray = jsonObject.getJSONArray("data_detail")
+                var cursor_del : Cursor = mHelper.deleteRequest()
+                cursor_del.moveToFirst()
+                cursor_del.close()
                 if (status_kirim.equals("true")){
                     val db = mHelper.getWritableDatabase()
-
-                    var cursor_del : Cursor = mHelper.deleteRequest()
-                    cursor_del.moveToFirst()
-                    cursor_del.close()
-
+                    var jsonArray: JSONArray = jsonObject.getJSONArray("data")
+                    var jsonArray_detail: JSONArray = jsonObject.getJSONArray("data_detail")
                     for (i in 0 until jsonArray.length()) {
                         val item = jsonArray.getJSONObject(i)
                         var no_request : String = item.getString(NO_REQUEST)
@@ -406,13 +493,13 @@ class ListKeluarActivity : AppCompatActivity() , View.OnClickListener {
                     }
 
                     Toast.makeText(this,"Sync Tabel Request Linen sukses", Toast.LENGTH_SHORT).show()
+
                 }
             },
             Response.ErrorListener { Toast.makeText(this, "Gagal terhubung ke server", Toast.LENGTH_SHORT).show() })
         val requestQueue = Volley.newRequestQueue(this)
         requestQueue.add(stringReq)
     }
-
 }
 
 

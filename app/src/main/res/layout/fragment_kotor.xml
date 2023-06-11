@@ -61,11 +61,10 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:layout_marginTop="16dp">
-            <ImageView
-                android:id="@+id/imgEmail"
-                android:layout_width="wrap_content"
+            <TextView
+                android:layout_width="100dp"
                 android:layout_height="wrap_content"
-                app:srcCompat="@drawable/ic_person_black_24dp"></ImageView>
+                android:text="PIC" />
 
             <Spinner android:id="@+id/spinner_pic"
                 android:layout_width="0dp"
@@ -80,12 +79,12 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:visibility="gone"
+            android:visibility="visible"
             android:layout_marginTop="16dp">
-            <ImageView
-                android:layout_width="wrap_content"
+            <TextView
+                android:layout_width="100dp"
                 android:layout_height="wrap_content"
-                app:srcCompat="@drawable/ic_label"></ImageView>
+                android:text="Kategori" />
 
             <Spinner android:id="@+id/spinner_kategori"
                 android:layout_width="0dp"
@@ -96,8 +95,67 @@
                 android:layout_marginRight="16dp"
                 />
         </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:visibility="visible"
+            android:layout_marginTop="16dp">
+            <TextView
+                android:layout_width="100dp"
+                android:layout_height="wrap_content"
+                android:text="Infeksius" />
 
+            <Spinner android:id="@+id/spinner_infeksius"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:background="@drawable/spinner_border"
+                android:layout_marginLeft="16dp"
+                android:layout_marginRight="16dp"
+                />
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+            <TextView
+                android:layout_width="100dp"
+                android:layout_height="wrap_content"
+                android:text="Berat Timbang" />
 
+            <EditText
+                android:id="@+id/textView_total_berat_real"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginLeft="16dp"
+                android:layout_marginRight="16dp"
+                android:text=""
+                android:inputType="numberDecimal"
+                android:hint=""></EditText>
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/lscan"
+            android:orientation="horizontal">
+            <TextView
+                android:layout_width="100dp"
+                android:layout_height="wrap_content"
+                android:textFontWeight="800"
+                android:text="Scan Tag" />
+
+            <EditText
+                android:id="@+id/textView_scan"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginLeft="16dp"
+                android:enabled="true"
+                android:layout_marginRight="16dp"
+                android:hint=""></EditText>
+        </LinearLayout>
 
     </LinearLayout>
 

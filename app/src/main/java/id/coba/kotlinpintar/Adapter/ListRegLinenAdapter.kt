@@ -47,6 +47,7 @@ class ListRegLinenAdapter (
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val data = notes[position]
+        holder.textNo.text = (position + 1).toString()
         holder.textNote.text = data["serial"]
         holder.textRuangan.text = "Ruang " + data["ruangan"]
 
@@ -65,6 +66,7 @@ class ListRegLinenAdapter (
     }
 
     inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) , View.OnClickListener{
+        val textNo = itemView.findViewById<TextView>(R.id.text_no)
         val textNote = itemView.findViewById<TextView>(R.id.text_note)
         val textRuangan = itemView.findViewById<TextView>(R.id.text_ruangan)
         val textJenis = itemView.findViewById<TextView>(R.id.text_jenis)
