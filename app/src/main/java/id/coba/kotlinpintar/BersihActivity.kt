@@ -29,48 +29,34 @@ import android.widget.Spinner
 import androidx.appcompat.widget.Toolbar
 
 class BersihActivity : AppCompatActivity(), View.OnClickListener {
-
     private lateinit var mFm: FragmentManager
     private lateinit var mFt: FragmentTransaction
     private lateinit var fragment6: Fragment_Bersih
-
     private lateinit var mFragmentCurrent: Fragment
-
     private lateinit var textView_title: TextView
     private lateinit var mSharedPreferences: SharedPreferences
+    private lateinit var mSharedPreferencesMode: SharedPreferences
     private lateinit var spinner_pic: Spinner
-
     private  var mToast: Toast? = null
-
-
     companion object {
         lateinit var mUhfrManager: UHFRManager
         lateinit var mSetEpcs : Set<String>
     }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_kotor)
-
         initView()
-
         Util.initSoundPool(this)
-
         mSharedPreferences = getSharedPreferences("UHF", MODE_PRIVATE)
-
-
+        mSharedPreferencesMode = getSharedPreferences("MODE", MODE_PRIVATE)
     }
-
     override fun onBackPressed() {
-        startActivity(Intent(this, ListBersihActivity::class.java))
+        startActivity(Intent(this, ListBersihActivityRecycle::class.java))
         this.finish()
     }
-
     override fun onClick(v: View) {
 
     }
-
-
     private fun initView() {
         val no_transaksi = getIntent().getStringExtra("no_transaksi")
         val hist = getIntent().getStringExtra("history")
@@ -109,34 +95,35 @@ class BersihActivity : AppCompatActivity(), View.OnClickListener {
     override fun onResume() {
         super.onResume()
         try {
-            mUhfrManager = UHFRManager.getIntance()// Init Uhf module
-            if (mUhfrManager != null) {
-                mUhfrManager.setPower(
-                    mSharedPreferences.getInt("readPower", 30),
-                    mSharedPreferences.getInt("writePower", 30)
-                )//set uhf module power
-                mUhfrManager.region =
-                    Reader.Region_Conf.valueOf(mSharedPreferences.getInt("freRegion", 1))
-                Toast.makeText(
-                    applicationContext,
-                    "FreRegion:" + Reader.Region_Conf.valueOf(
-                        mSharedPreferences.getInt(
-                            "freRegion",
-                            1
-                        )
-                    ) +
-                            "\n" + "Read Power:" + mSharedPreferences.getInt("readPower", 30) +
-                            "\n" + "Write Power:" + mSharedPreferences.getInt("writePower", 30),
-                    Toast.LENGTH_LONG
-                ).show()
-                showToast(getString(R.string.inituhfsuccess))
-            } else {
-                showToast(getString(R.string.inituhffail))
+            if (mSharedPreferencesMode.getBoolean("MODE", false)) {
+                mUhfrManager = UHFRManager.getIntance()// Init Uhf module
+                if (mUhfrManager != null) {
+                    mUhfrManager.setPower(
+                        mSharedPreferences.getInt("readPower", 30),
+                        mSharedPreferences.getInt("writePower", 30)
+                    )
+                    mUhfrManager.region =
+                        Reader.Region_Conf.valueOf(mSharedPreferences.getInt("freRegion", 1))
+                    Toast.makeText(
+                        applicationContext,
+                        "FreRegion:" + Reader.Region_Conf.valueOf(
+                            mSharedPreferences.getInt(
+                                "freRegion",
+                                1
+                            )
+                        ) +
+                                "\n" + "Read Power:" + mSharedPreferences.getInt("readPower", 30) +
+                                "\n" + "Write Power:" + mSharedPreferences.getInt("writePower", 30),
+                        Toast.LENGTH_LONG
+                    ).show()
+                    showToast(getString(R.string.inituhfsuccess))
+                } else {
+                    showToast(getString(R.string.inituhffail))
+                }
             }
-        }catch (e: Throwable) {
+        } catch (e: Throwable) {
             showToast("Device ini tidak mendukung..")
         }
-
     }
 
     private fun showToast(info: String) {
@@ -149,7 +136,6 @@ class BersihActivity : AppCompatActivity(), View.OnClickListener {
 
     override fun onPause() {
         super.onPause()
-        //        Log.e("main","pause");
         try {
             Thread.sleep(500)
         } catch (e: InterruptedException) {
@@ -200,7 +186,7 @@ class BersihActivity : AppCompatActivity(), View.OnClickListener {
             startActivity(
                 Intent(
                     applicationContext,
-                    ListBersihActivity::class.java
+                    ListBersihActivityRecycle::class.java
                 )
             )
         }

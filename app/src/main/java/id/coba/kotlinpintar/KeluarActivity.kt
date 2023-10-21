@@ -38,6 +38,7 @@ class KeluarActivity : AppCompatActivity(), View.OnClickListener {
 
     private lateinit var textView_title: TextView
     private lateinit var mSharedPreferences: SharedPreferences
+    private lateinit var mSharedPreferencesMode: SharedPreferences
     private lateinit var spinner_pic: Spinner
 
     private  var mToast: Toast? = null
@@ -57,13 +58,14 @@ class KeluarActivity : AppCompatActivity(), View.OnClickListener {
         Util.initSoundPool(this)
 
         mSharedPreferences = getSharedPreferences("UHF", MODE_PRIVATE)
+        mSharedPreferencesMode = getSharedPreferences("MODE", MODE_PRIVATE)
 
     }
 
 
 
     override fun onBackPressed() {
-        startActivity(Intent(this, ListKeluarActivity::class.java))
+        startActivity(Intent(this, ListKeluarActivityRecycle::class.java))
         this.finish()
     }
 
@@ -116,29 +118,31 @@ class KeluarActivity : AppCompatActivity(), View.OnClickListener {
         super.onResume()
 
         try {
-            mUhfrManager = UHFRManager.getIntance()// Init Uhf module
-            if (mUhfrManager != null) {
-                mUhfrManager.setPower(
-                    mSharedPreferences.getInt("readPower", 30),
-                    mSharedPreferences.getInt("writePower", 30)
-                )//set uhf module power
-                mUhfrManager.region =
-                    Reader.Region_Conf.valueOf(mSharedPreferences.getInt("freRegion", 1))
-                Toast.makeText(
-                    applicationContext,
-                    "FreRegion:" + Reader.Region_Conf.valueOf(
-                        mSharedPreferences.getInt(
-                            "freRegion",
-                            1
-                        )
-                    ) +
-                            "\n" + "Read Power:" + mSharedPreferences.getInt("readPower", 30) +
-                            "\n" + "Write Power:" + mSharedPreferences.getInt("writePower", 30),
-                    Toast.LENGTH_LONG
-                ).show()
-                showToast(getString(R.string.inituhfsuccess))
-            } else {
-                showToast(getString(R.string.inituhffail))
+            if(mSharedPreferencesMode.getBoolean("MODE", false)) {
+                mUhfrManager = UHFRManager.getIntance()// Init Uhf module
+                if (mUhfrManager != null) {
+                    mUhfrManager.setPower(
+                        mSharedPreferences.getInt("readPower", 30),
+                        mSharedPreferences.getInt("writePower", 30)
+                    )//set uhf module power
+                    mUhfrManager.region =
+                        Reader.Region_Conf.valueOf(mSharedPreferences.getInt("freRegion", 1))
+                    Toast.makeText(
+                        applicationContext,
+                        "FreRegion:" + Reader.Region_Conf.valueOf(
+                            mSharedPreferences.getInt(
+                                "freRegion",
+                                1
+                            )
+                        ) +
+                                "\n" + "Read Power:" + mSharedPreferences.getInt("readPower", 30) +
+                                "\n" + "Write Power:" + mSharedPreferences.getInt("writePower", 30),
+                        Toast.LENGTH_LONG
+                    ).show()
+                    showToast(getString(R.string.inituhfsuccess))
+                } else {
+                    showToast(getString(R.string.inituhffail))
+                }
             }
         }catch (e: Throwable) {
             showToast("Device ini tidak mendukung..")
@@ -212,7 +216,7 @@ class KeluarActivity : AppCompatActivity(), View.OnClickListener {
             startActivity(
                 Intent(
                     applicationContext,
-                    ListKeluarActivity::class.java
+                    ListKeluarActivityRecycle::class.java
                 )
             )
         }

@@ -49,7 +49,7 @@ public class EPCKeluarAdapter extends BaseAdapter {
             LayoutInflater inflater =  activity.getLayoutInflater();
             if (convertView == null) {
                 holder = new ViewHolder();
-                convertView = inflater.inflate(R.layout.item_keluar, null);
+                convertView = inflater.inflate(R.layout.item_keluar_new, null);
 //                convertView = LayoutInflater.from(activity).inflate(R.layout.item_epc, null);
                 holder.tvEpc = (TextView) convertView.findViewById(R.id.textView_epc);
                 holder.tvId = (TextView) convertView.findViewById(R.id.textView_id);

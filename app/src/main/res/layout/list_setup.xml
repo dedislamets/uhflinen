@@ -13,7 +13,7 @@
         android:layout_alignParentTop="true"
         android:layout_marginRight="10dp"
         android:padding="5dp"
-        android:layout_marginLeft="10dp"
+        android:layout_marginLeft="5dp"
         android:src="@drawable/ic_room_black_24dp" />
 
     <TextView

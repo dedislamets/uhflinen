@@ -29,6 +29,8 @@ import android.os.Handler
 import android.os.Looper
 import android.os.Message
 import android.util.Log
+import androidx.appcompat.app.ActionBar
+import androidx.appcompat.widget.AppCompatTextView
 import com.android.volley.*
 import id.coba.kotlinpintar.Rest.ApiClient
 import kotlinx.android.synthetic.main.activity_lihat__ruangan.*
@@ -81,7 +83,7 @@ class Activity_Setting : AppCompatActivity() {
 //            handler?.sendEmptyMessageDelayed(0, 100)
             if(Value == 100){
                 Toast.makeText(getApplicationContext(), "Progress Completed", Toast.LENGTH_SHORT).show()
-                persentase.text = "Sync Tabel COmpleted"
+                persentase.text = "Sync Tabel Completed"
             }
             Value+= 5
 
@@ -104,17 +106,17 @@ class Activity_Setting : AppCompatActivity() {
         listMenu = ArrayList()
 
         listMenu.add(MenuModel("Master"))
-        listMenu.add(MenuModel("Ruangan", "test", R.drawable.ic_room, null))
-        listMenu.add(MenuModel("Barang", "test", R.drawable.ic_scanner_black_24dp, null))
-        listMenu.add(MenuModel("Base API", "test", R.drawable.ic_settings, null))
+        listMenu.add(MenuModel("Ruangan", "test", R.drawable.setting_room, null))
+        listMenu.add(MenuModel("Barang", "test", R.drawable.setting_barang, null))
+        listMenu.add(MenuModel("Base API", "test", R.drawable.setting_api, null))
 //        listMenu.add(MenuModel("Firebase Token", "test", R.drawable.ic_whatshot_black_24dp))
-        listMenu.add(MenuModel("Reset Notifikasi", "test", R.drawable.ic_whatshot_black_24dp, null))
+        listMenu.add(MenuModel("Reset Notifikasi", "test", R.drawable.setting_notifikasi, null))
         listMenu.add(MenuModel("Pengaturan"))
-        listMenu.add(MenuModel("Sync Tabel", "test", R.drawable.ic_sync_black_24dp, null))
-        listMenu.add(MenuModel("Sync Barang", "test", R.drawable.ic_sync_black_24dp, null))
-        listMenu.add(MenuModel("Reset Data", "test", R.drawable.ic_delete_black_24dp, null))
-        listMenu.add(MenuModel("Alter Tabel", "test", R.drawable.ic_edit, null))
-        listMenu.add(MenuModel("Mode Handheld", "test", R.drawable.ic_edit, false))
+        listMenu.add(MenuModel("Sync Master", "test", R.drawable.setting_sync, null))
+//        listMenu.add(MenuModel("Sync Barang", "test", R.drawable.ic_sync_black_24dp, null))
+        listMenu.add(MenuModel("Reset Data", "test", R.drawable.setting_reset, null))
+        listMenu.add(MenuModel("Device", "test", R.drawable.baseline_document_scanner_24, null))
+        listMenu.add(MenuModel("Mode Handheld", "test", R.drawable.setting_handheld, false))
         listMenu.add(MenuModel("Logout", "test", R.drawable.ic_exit_to_app_black_24dp, null))
 
 
@@ -156,25 +158,20 @@ class Activity_Setting : AppCompatActivity() {
                     db.delete(TABLE_BARANG, null, null)
                     db.delete(TABLE_RUANGAN, null, null)
                     db.delete(TABLE_DEFECT, null, null)
-                    db.delete(InputContract.TaskEntry.TABLE, null, null)
-                    db.delete(InputContract.TaskEntry.TABLE_DETAIL, null, null)
-                    db.delete(TABLE_BERSIH, null, null)
-                    db.delete(TABLE_BERSIH_DETAIL, null, null)
-                    db.delete(TABLE_KELUAR, null, null)
-                    db.delete(TABLE_KELUAR_DETAIL, null, null)
-                    db.delete(TABLE_RUSAK, null, null)
-                    db.delete(TABLE_RUSAK_DETAIL, null, null)
-                    db.delete(TABLE_REQUEST, null, null)
-                    db.delete(TABLE_REQUEST_DETAIL, null, null)
+                    db.delete(TABLE_JENIS_BARANG, null, null)
+                    db.delete(TABLE_PIC, null, null)
                     db.delete(TABLE_NOTIFIKASI, null, null)
+                    db.delete(TABLE_KATEGORI, null, null)
+                    db.delete(TABLE_INFEKSIUS, null, null)
                     Toast.makeText(this,"Reset Tabel Sukses", Toast.LENGTH_SHORT).show()
                     db.close()
-                }else if (dataModel.title == "Alter Tabel"){
+                }else if (dataModel.title == "Alter Tabel") {
                     val db = InputDbHelper(this)
                     db.alterTabel()
                     db.createLinenKotor()
-//
-//                    Toast.makeText(this,"Alter Tabel Linen Bersih", Toast.LENGTH_SHORT).show()
+                }else if(dataModel.title == "Device"){
+                    val intentBiasa = Intent(this, IntentBiasaActivity::class.java)
+                    startActivity(intentBiasa)
                 }else if (dataModel.title == "Sync Barang"){
                     val db = mHelper.getWritableDatabase()
                     db.delete(TABLE_BARANG, null, null)
@@ -185,7 +182,7 @@ class Activity_Setting : AppCompatActivity() {
                     syncRuangan()
                 }else if (dataModel.title == "Mode Handheld"){
                     Toast.makeText(this,"Handheld", Toast.LENGTH_SHORT).show()
-                }else if (dataModel.title == "Sync Tabel"){
+                }else if (dataModel.title == "Sync Master"){
                     isStarted = true
                     Thread(Runnable {
                         while (primaryProgressStatus < 100) {
@@ -198,47 +195,30 @@ class Activity_Setting : AppCompatActivity() {
                                     db.createLinen()
                                     db.createJenisBarang()
                                     db.createPIC()
-                                    db.createLinenKotor()
-                                    db.createLinenBersih()
                                     db.createKategori()
                                     db.createInfeksius()
-                                    db.createLinenKeluar()
-                                    db.createLinenRusak()
-                                    db.createLinenRequest()
                                     db.createDefect()
                                     db.createNotifikasi()
                                     db.createLogin()
-                                }else if(primaryProgressStatus == 20) {
-                                    syncInfeksius()
                                 }else if(primaryProgressStatus == 30) {
-                                    syncRuangan()
-                                }else if(primaryProgressStatus == 35) {
-                                    syncKategori()
+                                    syncInfeksius()
                                 }else if(primaryProgressStatus == 40) {
-
+                                    syncRuangan()
                                 }else if(primaryProgressStatus == 50) {
-                                    syncJenisBarang()
+                                    syncKategori()
                                 }else if(primaryProgressStatus == 60) {
-                                    syncPIC()
-                                }else if(primaryProgressStatus == 65) {
-                                    syncNotifikasi()
+                                    syncJenisBarang()
                                 }else if(primaryProgressStatus == 70) {
-                                    syncDefect()
-                                }else if(primaryProgressStatus == 75) {
-                                    syncKotor()
+                                    syncPIC()
                                 }else if(primaryProgressStatus == 80) {
-                                    syncBersih()
-                                }else if(primaryProgressStatus == 85) {
-                                    syncKeluar()
+                                    syncNotifikasi()
                                 }else if(primaryProgressStatus == 90) {
-                                    syncRequest()
-                                }else if(primaryProgressStatus == 95) {
-                                    syncRusak()
+                                    syncDefect()
                                 }
                                 progressBar.setProgress(primaryProgressStatus) // Memasukan Value pada ProgressBar
 
                                 if (primaryProgressStatus == 100) {
-                                    syncLinen(1)
+                                    //syncLinen(1)
                                     runOnUiThread { persentase.text = "All tasks completed" }
                                     isStarted = false
                                 }else{
@@ -249,8 +229,6 @@ class Activity_Setting : AppCompatActivity() {
                             } catch (e: InterruptedException) {
                                 e.printStackTrace()
                             }
-
-
                         }
                     }).start()
                 }else{
@@ -261,7 +239,10 @@ class Activity_Setting : AppCompatActivity() {
 
         })
 
-        getSupportActionBar()?.setTitle("Menu Master")
+        supportActionBar?.setCustomView(R.layout.abs_layout)
+        supportActionBar?.setDisplayOptions(ActionBar.DISPLAY_SHOW_CUSTOM)
+        val title = supportActionBar?.customView?.findViewById<AppCompatTextView>(R.id.tvTitle)
+        title?.text = "SETTING"
 
     }
     private fun deleteToken(id_user: Int) {

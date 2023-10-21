@@ -1,36 +1,19 @@
 package id.coba.kotlinpintar.Adapter
 
-import android.content.ContentValues
-import android.content.DialogInterface
-import android.content.Intent
 import android.database.Cursor
-import android.database.sqlite.SQLiteDatabase
 import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ImageView
 import android.widget.TextView
-import android.widget.Toast
-import androidx.appcompat.app.AlertDialog
-import androidx.core.content.ContextCompat.startActivity
 import androidx.recyclerview.widget.RecyclerView
-import com.android.volley.Request
-import com.android.volley.RequestQueue
-import com.android.volley.Response
-import com.android.volley.toolbox.StringRequest
-import com.android.volley.toolbox.Volley
-import id.coba.kotlinpintar.InputDbHelper.*
-import id.coba.kotlinpintar.Lihat_Ruangan
-import id.coba.kotlinpintar.R
-import kotlinx.android.synthetic.main.adapter_note.view.*
-import kotlinx.android.synthetic.main.row_layout.view.*
-import org.json.JSONObject
-import java.nio.file.Files.delete
-import id.coba.kotlinpintar.Rest.ApiClient.BASE_URL
-import id.coba.kotlinpintar.ListRegisterLinen
-import id.coba.kotlinpintar.Model.RegLinenModel
+import id.coba.kotlinpintar.Dto.Movie
 import id.coba.kotlinpintar.InputDbHelper
+import id.coba.kotlinpintar.InputDbHelper.ID_JENIS
+import id.coba.kotlinpintar.InputDbHelper.JENIS
+import id.coba.kotlinpintar.InputDbHelper.TABLE_JENIS_BARANG
+import id.coba.kotlinpintar.R
+import kotlinx.android.synthetic.main.adapter_note.view.text_note
 
 
 class ListRegLinenAdapter (
@@ -70,11 +53,9 @@ class ListRegLinenAdapter (
         val textNote = itemView.findViewById<TextView>(R.id.text_note)
         val textRuangan = itemView.findViewById<TextView>(R.id.text_ruangan)
         val textJenis = itemView.findViewById<TextView>(R.id.text_jenis)
-//        val imgDelete = itemView.findViewById<ImageView>(R.id.imgDelete)
 
         init {
             itemView.setOnClickListener { this }
-//            imgDelete.setOnClickListener(this)
             textNote.setOnClickListener(this)
             textJenis.setOnClickListener(this)
             textRuangan.setOnClickListener(this)

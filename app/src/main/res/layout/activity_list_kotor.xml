@@ -48,18 +48,6 @@
                 android:drawableTint="@color/colorWhite"
                 android:text="Tambah Linen"/>
 
-            <Button
-                android:id="@+id/button_eksport"
-                android:layout_width="0dp"
-                android:layout_weight="1"
-                android:layout_height="wrap_content"
-                android:background="@drawable/btn_gradient"
-                android:minWidth="150dp"
-                android:textColor="@color/colorWhite"
-                android:drawableLeft="@drawable/ic_eksport_24dp"
-                android:drawableTint="@color/colorWhite"
-                android:text="Export"/>
-
         </LinearLayout>
 
 
@@ -73,7 +61,7 @@
         android:orientation="horizontal"
         android:id="@+id/filter"
         android:padding="20dp"
-        android:visibility="gone"
+        android:visibility="visible"
         app:layout_constraintTop_toBottomOf="@id/tombol_menu"
         app:layout_constraintStart_toStartOf="parent">
 
@@ -152,17 +140,19 @@
         android:padding="5dp"
         android:visibility="visible"
         android:orientation="horizontal">
+
         <Button
             android:id="@+id/button_sync"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_margin="10dp"
             android:layout_weight="1"
             android:background="@drawable/btn_gradient"
-            android:layout_margin="10dp"
             android:drawableLeft="@drawable/ic_sync_black_24dp"
             android:drawableTint="@color/colorWhite"
+            android:text="Syncronize"
             android:textColor="@color/colorWhite"
-            android:text="Syncronize"/>
+            android:visibility="visible" />
 
     </LinearLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_height="wrap_content"
+    android:background="@drawable/border_corner"
+    android:orientation="horizontal"
+    android:padding="5dip"
+    android:layout_marginTop="10dp">
+
+    <!--  ListRow Left sied Thumbnail image -->
+    <LinearLayout android:id="@+id/thumbnail"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:padding="3dip"
+        android:layout_alignParentLeft="true"
+        android:layout_marginRight="5dip">
+
+        <com.google.android.material.imageview.ShapeableImageView
+            android:id="@+id/list_image"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_marginTop="5dp"
+            android:src="@drawable/nurse4"
+            android:background="@color/hijau"
+            app:shapeAppearanceOverlay="@style/Circular"
+            app:strokeColor="#E8E8E8"
+            app:strokeWidth="3dp"/>
+
+    </LinearLayout>
+
+    <!-- Title Of Song-->
+    <TextView
+        android:id="@+id/title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignTop="@id/thumbnail"
+        android:layout_toRightOf="@+id/thumbnail"
+        android:text="No Transaksi"
+        android:textColor="#040404"
+        android:textSize="15dp"
+        android:textStyle="bold"
+        android:typeface="sans" />
+    <!-- Artist Name -->
+    <TextView
+        android:id="@+id/artist"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/title"
+        android:layout_marginTop="1dip"
+        android:layout_toRightOf="@id/thumbnail"
+        android:text="PIC : - "
+        android:textStyle="bold"
+        android:textColor="#343434"
+        android:textSize="16dp" />
+    <TextView
+        android:id="@+id/ruangan"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/artist"
+        android:layout_marginTop="5dip"
+        android:layout_toRightOf="@id/thumbnail"
+        android:text="Poli : -"
+        android:textColor="#343434"
+        android:textSize="13dp" />
+<!--    <TextView-->
+<!--        android:id="@+id/status_sync"-->
+<!--        android:layout_width="400px"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:layout_below="@id/ruangan"-->
+<!--        android:layout_marginTop="1dip"-->
+<!--        android:layout_toRightOf="@id/thumbnail"-->
+<!--        android:text="Status"-->
+<!--        android:textColor="@color/colorTrendingStart"-->
+<!--        android:textSize="14sp" />-->
+    <!-- Rightend Duration -->
+    <TextView
+        android:id="@+id/duration"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignTop="@id/title"
+        android:layout_alignParentRight="true"
+        android:layout_marginRight="15dip"
+        android:gravity="right"
+        android:text="current time"
+        android:textColor="#000000"
+        android:alpha="0.8"
+        android:textSize="13dp"
+        android:textFontWeight="600" />
+    <TextView
+        android:id="@+id/jam"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:layout_marginRight="15dip"
+        android:layout_below="@id/duration"
+        android:gravity="right"
+        android:text="Jam"
+        android:textColor="#000000"
+        android:alpha="0.8"
+        android:textSize="13dp"
+        android:textFontWeight="600" />
+    <TextView
+        android:id="@+id/status_sync"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:layout_below="@id/jam"
+        android:layout_centerVertical="true"
+        android:layout_marginRight="15dip"
+        android:gravity="right"
+        android:text="Status"
+        android:textColor="#10bcc9"
+        android:textSize="12dp"
+        android:textStyle="bold" />
+<!--    <ImageView android:layout_width="wrap_content"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:src="@drawable/ic_keyboard_arrow_right"-->
+<!--        android:layout_alignParentRight="true"-->
+<!--        android:layout_centerVertical="true"/>-->
+
+</RelativeLayout>

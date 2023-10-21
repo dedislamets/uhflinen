@@ -1,47 +1,51 @@
 package id.coba.kotlinpintar
 
-import java.util.ArrayList
-import java.util.Set
-
+import android.content.Intent
 import android.content.SharedPreferences
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.view.MenuItem
 import android.view.View
+import android.widget.ArrayAdapter
+import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentTransaction
 import com.BRMicro.Tools
 import com.handheld.uhfr.UHFRManager
 import com.uhf.api.cls.Reader
-import androidx.core.app.ComponentActivity.ExtraData
-import androidx.core.content.ContextCompat.getSystemService
-import android.icu.lang.UCharacter.GraphemeClusterBreak.T
-import android.content.Intent
-import android.database.Cursor
-import android.widget.SimpleCursorAdapter
-import android.widget.Spinner
-import androidx.appcompat.widget.Toolbar
+import id.coba.kotlinpintar.Component.BottomSheetDialog
+import id.coba.kotlinpintar.Dto.ListRuangan
+import id.coba.kotlinpintar.Rest.ApiClient
+import id.coba.kotlinpintar.Rest.ApiInterface
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
+import java.util.HashMap
+import java.util.Set
 
-class KotorActivity : AppCompatActivity(), View.OnClickListener {
+class KotorActivity : AppCompatActivity(), BottomSheetDialog.BottomSheetListener, View.OnClickListener {
 
     private lateinit var mFm: FragmentManager
     private lateinit var mFt: FragmentTransaction
     private lateinit var fragment6: Fragment_Kotor
+    private lateinit var fragmentDialog: BottomSheetDialog
 
     private lateinit var mFragmentCurrent: Fragment
 
     private lateinit var textView_title: TextView
     private lateinit var mSharedPreferences: SharedPreferences
+    private lateinit var mSharedPreferencesMode: SharedPreferences
     private lateinit var spinner_pic: Spinner
 
     private  var mToast: Toast? = null
-
+    private lateinit var apiInterface: ApiInterface
+    var ListRoom: MutableList<String> = ArrayList()
 
     companion object {
         lateinit var mUhfrManager: UHFRManager
@@ -49,19 +53,20 @@ class KotorActivity : AppCompatActivity(), View.OnClickListener {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_kotor)
 
+        super.onCreate(savedInstanceState)
         initView()
+        setContentView(R.layout.activity_kotor)
 
         Util.initSoundPool(this)
 
         mSharedPreferences = getSharedPreferences("UHF", MODE_PRIVATE)
-
+        mSharedPreferencesMode = getSharedPreferences("MODE", MODE_PRIVATE)
+        apiInterface = ApiClient.getClient().create(ApiInterface::class.java)
 
     }
     override fun onBackPressed() {
-        startActivity(Intent(this, ListKotorActivity::class.java))
+        startActivity(Intent(this, ListKotorActivityRecyle::class.java))
         this.finish()
     }
 
@@ -69,9 +74,11 @@ class KotorActivity : AppCompatActivity(), View.OnClickListener {
 
     }
 
+    override fun onButtonClicked(text: String?) {
+        TODO("Not yet implemented")
+    }
 
     private fun initView() {
-//        spinner_pic = findViewById(R.id.spinner1)
         val no_transaksi = getIntent().getStringExtra("no_transaksi")
 
         fragment6 = Fragment_Kotor()
@@ -88,50 +95,69 @@ class KotorActivity : AppCompatActivity(), View.OnClickListener {
     }
 
     private fun loadSpinner() {
-
         val db = InputDbHelper(this)
-        var serviceCursor: Cursor = db.serviceCursor
-        var from: Array<String> = arrayOf("nama_ruangan")
-        var to: IntArray = intArrayOf(android.R.id.text1)
+        //var serviceCursor: Cursor = db.serviceCursor
 
-        val adapterRuangan = SimpleCursorAdapter(
-            this,
-            android.R.layout.simple_spinner_dropdown_item,
-            serviceCursor,
-            from,
-            to,
-            0
-        )
-        spinner_pic.setAdapter(adapterRuangan)
+        val call2: Call<ListRuangan> = apiInterface.ruangan
+        call2.enqueue(object : Callback<ListRuangan> {
+            override fun onResponse(call: Call<ListRuangan>, response: Response<ListRuangan>) {
+                val ruanganList: ListRuangan = response.body()
+                val datumList: List<ListRuangan.Datum> = ruanganList.data
+
+                for (datum in datumList) {
+                    ListRoom.add(datum.ruangan)
+                }
+                /*var from: Array<String> = arrayOf("nama_ruangan")
+                var to: IntArray = intArrayOf(android.R.id.text1)
+                val adapterRuangan = SimpleCursorAdapter(
+                    baseContext,
+                    android.R.layout.simple_spinner_dropdown_item,
+                    cursor,
+                    from,
+                    to,
+                    0
+                )*/
+                val arrayAdapter = ArrayAdapter(this@KotorActivity,android.R.layout.simple_spinner_dropdown_item,ListRoom)
+
+                spinner_pic.setAdapter(arrayAdapter)
+            }
+
+            override fun onFailure(call: Call<ListRuangan>, t: Throwable) {
+                call.cancel()
+            }
+        })
+
     }
 
     override fun onResume() {
         super.onResume()
 
         try{
-            mUhfrManager = UHFRManager.getIntance()// Init Uhf module
-            if (mUhfrManager != null) {
-                mUhfrManager.setPower(
-                    mSharedPreferences.getInt("readPower", 30),
-                    mSharedPreferences.getInt("writePower", 30)
-                )//set uhf module power
-                mUhfrManager.region =
-                    Reader.Region_Conf.valueOf(mSharedPreferences.getInt("freRegion", 1))
-                Toast.makeText(
-                    applicationContext,
-                    "FreRegion:" + Reader.Region_Conf.valueOf(
-                        mSharedPreferences.getInt(
-                            "freRegion",
-                            1
-                        )
-                    ) +
-                            "\n" + "Read Power:" + mSharedPreferences.getInt("readPower", 30) +
-                            "\n" + "Write Power:" + mSharedPreferences.getInt("writePower", 30),
-                    Toast.LENGTH_LONG
-                ).show()
-                showToast(getString(R.string.inituhfsuccess))
-            } else {
-                showToast(getString(R.string.inituhffail))
+            if(mSharedPreferencesMode.getBoolean("MODE", false)){
+                mUhfrManager = UHFRManager.getIntance()// Init Uhf module
+                if (mUhfrManager != null) {
+                    mUhfrManager.setPower(
+                        mSharedPreferences.getInt("readPower", 30),
+                        mSharedPreferences.getInt("writePower", 30)
+                    )//set uhf module power
+                    mUhfrManager.region =
+                        Reader.Region_Conf.valueOf(mSharedPreferences.getInt("freRegion", 1))
+                    Toast.makeText(
+                        applicationContext,
+                        "FreRegion:" + Reader.Region_Conf.valueOf(
+                            mSharedPreferences.getInt(
+                                "freRegion",
+                                1
+                            )
+                        ) +
+                                "\n" + "Read Power:" + mSharedPreferences.getInt("readPower", 30) +
+                                "\n" + "Write Power:" + mSharedPreferences.getInt("writePower", 30),
+                        Toast.LENGTH_LONG
+                    ).show()
+                    showToast(getString(R.string.inituhfsuccess))
+                } else {
+                    showToast(getString(R.string.inituhffail))
+                }
             }
         }catch (e: Throwable) {
             showToast("Device ini tidak mendukung..")
@@ -201,7 +227,7 @@ class KotorActivity : AppCompatActivity(), View.OnClickListener {
             startActivity(
                 Intent(
                     applicationContext,
-                    ListKotorActivity::class.java
+                    ListKotorActivityRecyle::class.java
                 )
             )
         }

@@ -2,6 +2,7 @@ package id.coba.kotlinpintar;
 
 import android.app.Activity;
 import android.graphics.Color;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -60,16 +61,6 @@ public class EPCBersihadapter extends BaseAdapter {
                 holder = (ViewHolder) convertView.getTag();
             }
 
-//            fragmnt = inflater.inflate(R.layout.fragment_bersih, null);
-
-//            tvTagSumBerat = fragmnt.findViewById(R.id.textView_total_berat);
-//            if (list != null && !list.isEmpty()) {
-//                int id = position + 1;
-//                holder.tvId.setText("" + id);
-//                holder.tvEpc.setText(list.get(position).getepc());
-//                holder.tVRssi.setText(list.get(position).getrssi());
-//
-//            }
             HashMap map = list.get(position);
 
             if (list != null && !list.isEmpty()) {
@@ -105,7 +96,7 @@ public class EPCBersihadapter extends BaseAdapter {
 
 
         }catch (Exception e){
-
+            Log.e("adapter", e.getMessage());
         }
 
         return convertView;

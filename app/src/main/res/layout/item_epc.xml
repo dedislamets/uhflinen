@@ -2,7 +2,8 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@layout/list_selector"
+    android:background="@color/grey100"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="horizontal">
     <LinearLayout
         android:layout_width="match_parent"
@@ -13,9 +14,16 @@
             android:layout_width="30dp"
             android:layout_height="wrap_content"
             android:gravity="left"
+            android:visibility="gone"
             android:layout_margin="5dp"
             android:text="No"
             android:id="@+id/textView_id" />
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_gravity="right"
+            android:layout_height="wrap_content"
+            android:paddingRight="10dp"
+            app:srcCompat="@drawable/handuk"></ImageView>
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -24,54 +32,42 @@
                 android:layout_width="match_parent"
                 android:id="@+id/row1"
                 android:layout_height="wrap_content"
+                android:paddingBottom="5dp"
                 android:orientation="horizontal">
-                <TextView
-                    android:id="@+id/textView_epc"
-                    android:layout_width="130dp"
-                    android:layout_height="wrap_content"
-                    android:text="Serial"
-                    android:textColor="#040404"
-                    android:textSize="18dp"
-                    android:typeface="sans" />
+
                 <TextView
                     android:id="@+id/textView_barang"
-                    android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
                     android:text="Nama Barang"
                     android:textStyle="bold"
-                    android:textAlignment="textEnd"
+                    android:layout_width="200dp"
                     android:textColor="#343434"
-                    android:textSize="18dp" />
+                    android:textSize="13sp" />
+                <TextView
+                    android:id="@+id/textView_epc"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Serial"
+                    android:textAlignment="textEnd"
+                    android:textColor="#040404"
+                    android:textSize="13dp"
+                    android:typeface="sans" />
             </LinearLayout>
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_below="@id/row1"
                 android:orientation="horizontal">
-                <TextView
-                    android:id="@+id/txtRuangan"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Ruang :"
-                    android:textColor="#040404"
-                    android:textSize="15dip"
-                    android:typeface="sans" />
+
                 <TextView
                     android:id="@+id/textView_rssi"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:text="Ruangan"
                     android:layout_weight="1"
-                    android:paddingLeft="10dp"
-                    android:textColor="#343434"
-                    android:textStyle="bold"
-                    android:textSize="18sp"/>
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Berat : ">
+                    android:textColor="#475467"
+                    android:textSize="13dp"/>
 
-                </TextView>
                 <TextView
                     android:id="@+id/textView_berat"
                     android:layout_width="50dp"
@@ -80,7 +76,7 @@
                     android:textStyle="bold"
                     android:textColor="#343434"
                     android:textAlignment="textEnd"
-                    android:textSize="18sp" />
+                    android:textSize="13dp" />
 
             </LinearLayout>
         </LinearLayout>

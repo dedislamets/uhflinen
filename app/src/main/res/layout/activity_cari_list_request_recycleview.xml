@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/swipeRefresh"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".CariListRequestActivity"
+    android:background="@color/colorWhite">
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fillViewport="true"
+        android:background="@color/backgroundDefault"
+        android:padding="10dp">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical">
+            <LinearLayout
+                android:id="@+id/layout_empty"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/filter">
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/svg_keluar"
+                    android:padding="10dp"
+                    android:layout_gravity="center"
+                    />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:lineSpacingExtra="1sp"
+                    android:textStyle="bold"
+                    android:layout_gravity="center"
+                    android:textSize="18sp"
+                    android:layout_marginBottom="7dp"
+                    android:text="Belum ada list request linen" />
+
+
+
+            </LinearLayout>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:id="@+id/filter"
+                android:padding="10dp"
+                android:visibility="gone"
+                app:layout_constraintTop_toTopOf="parent">
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingBottom="15dp"
+                    android:textColor="@color/textList"
+                    android:textStyle="bold"
+                    android:text="Request List"
+                    android:textSize="22dp"
+                    android:id="@+id/h1"/>
+                <EditText
+                    android:layout_weight="1"
+                    android:id="@+id/txtCari"
+                    android:drawableLeft="@drawable/ic_search_black_24dp"
+                    android:drawableTint="@color/gre"
+                    android:background="@drawable/search_icon_background"
+                    android:layout_width="match_parent"
+                    android:layout_height="40dp"
+                    android:paddingLeft="10dp"
+                    android:nextFocusUp="@id/txtCari"
+                    android:nextFocusLeft="@id/txtCari"
+                    android:hint="Cari Nomor, Requestor, Ruangan, Jenis"/>
+<!--                <androidx.appcompat.widget.SearchView-->
+<!--                    android:id="@+id/country_search"-->
+<!--                    android:layout_width="match_parent"-->
+<!--                    android:layout_height="wrap_content"-->
+<!--                    android:background="@drawable/search_icon_background"-->
+<!--                    android:textCursorDrawable="@null"-->
+<!--                    app:iconifiedByDefault="false"-->
+<!--                    android:tooltipText="Search"-->
+
+<!--                    app:queryBackground="@null" />-->
+            </LinearLayout>
+            <ProgressBar
+                android:id="@+id/progressBar"
+                android:layout_width="match_parent"
+                android:layout_gravity="center"
+                app:layout_constraintTop_toBottomOf="@id/filter"
+                android:layout_height="48dp"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"/>
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvKeluar"
+                android:minHeight="200dp"
+                app:layout_constraintTop_toBottomOf="@id/filter"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintRight_toRightOf="parent"
+                android:layout_width="match_parent"
+                android:layout_height="0dp" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+    </ScrollView>
+
+</androidx.swiperefreshlayout.widget.SwipeRefreshLayout>

@@ -9,11 +9,7 @@ import kotlinx.android.synthetic.main.product_list.view.*
 
 class ProductAdapter(val products: ArrayList<Product>) : RecyclerView.Adapter<ProductAdapter.ViewHolder>() {
 
-    private val images = intArrayOf(R.drawable.android_image_1,
-        R.drawable.android_image_2, R.drawable.android_image_3,
-        R.drawable.android_image_4, R.drawable.android_image_5,
-        R.drawable.android_image_6, R.drawable.android_image_7,
-        R.drawable.android_image_8)
+    private val images = intArrayOf(R.drawable.handuk)
 
     override fun getItemCount(): Int = products.size
 

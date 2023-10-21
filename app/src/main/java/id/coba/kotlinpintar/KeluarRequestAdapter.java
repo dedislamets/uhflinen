@@ -22,11 +22,9 @@ import static id.coba.kotlinpintar.InputDbHelper.STATUS_REQUEST;
  */
 public class KeluarRequestAdapter extends BaseAdapter {
 
-    //    private List<EpcDataModel> list ;
     public ArrayList<HashMap> list;
     public ArrayList<HashMap> list_request;
     private HashMap mapEpc;
-//    private ArrayList<HashMap<String, String>> list;
     Activity activity;
 
     public KeluarRequestAdapter(Activity activity, ArrayList<HashMap> list, ArrayList<HashMap> list_request) {
@@ -57,7 +55,7 @@ public class KeluarRequestAdapter extends BaseAdapter {
             LayoutInflater inflater =  activity.getLayoutInflater();
             if (convertView == null) {
                 holder = new ViewHolder();
-                convertView = inflater.inflate(R.layout.item_request_keluar, null);
+                convertView = inflater.inflate(R.layout.item_request_keluar_new, null);
                 holder.tvNo = (TextView) convertView.findViewById(R.id.textView_id);
                 holder.tvJenis = (TextView) convertView.findViewById(R.id.textView_jenis);
                 holder.tvQty = (TextView) convertView.findViewById(R.id.textView_qty);
@@ -75,18 +73,18 @@ public class KeluarRequestAdapter extends BaseAdapter {
                 holder.tvJenis.setText("" + map.get("jenis"));
                 holder.tvQty.setText("" + map.get("qty"));
                 holder.tvReady.setText("" + map.get("ready"));
-//                int qty = 0;
-//                if(map.get("ready") != null){
-//                    qty = Integer.parseInt( map.get("ready").toString());
-//                }
-//                int x =0;
-//                for (HashMap map_request : list_request) {
-//                    if (map.get("jenis").equals(map_request.get("item"))) {
-//                        qty++;
-//                        holder.tvReady.setText( String.valueOf(qty) );
-//                        list_request.get(x).put("ready", qty);
-//                    }
-//                }
+                int qty = 0;
+                /*if(map.get("ready") != null){
+                    qty = Integer.parseInt( map.get("ready").toString());
+                }*/
+                int x =0;
+                for (HashMap map_request : list_request) {
+                    if (map.get("jenis").equals(map_request.get("item")) && map.get("ready") != null) {
+                        qty++;
+                        holder.tvReady.setText( String.valueOf(qty) );
+                        list_request.get(x).put("ready", qty);
+                    }
+                }
             }
 
 

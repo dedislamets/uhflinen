@@ -78,7 +78,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textColor="@color/colorWhite"
-            android:background="@drawable/btn_gradient"
+            android:background="@drawable/btn_ijo"
             android:layout_weight="1"
             android:text="@string/simpan"/>
 

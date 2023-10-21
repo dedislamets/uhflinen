@@ -4,10 +4,13 @@ import android.content.ContentValues;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
+import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -48,18 +51,20 @@ import static id.coba.kotlinpintar.InputDbHelper.NAMA_USER;
 import static id.coba.kotlinpintar.InputDbHelper.PASSWORD;
 import static id.coba.kotlinpintar.InputDbHelper.TABLE_BARANG;
 import static id.coba.kotlinpintar.InputDbHelper.TABLE_LOGIN;
+import static id.coba.kotlinpintar.InputDbHelper.TABLE_SETTING;
 import static id.coba.kotlinpintar.InputDbHelper.TOKEN;
 import static id.coba.kotlinpintar.InputDbHelper.WEB_URL;
 
 public class Activity_Login extends AppCompatActivity {
     private static final int REQUEST_CODE = 10;
     EditText username, password;
+    AutoCompleteTextView company;
     Button btnLogin, exit;
     InputDbHelper db;
     SharedPreferences sharedpreferences;
     LoginInterface mApiInterface;
     private InputDbHelper mHelper;
-
+    String[] companyList = {"Demo", "RASB", "Gambiran", "Malingping"};
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -71,10 +76,19 @@ public class Activity_Login extends AppCompatActivity {
         username = (EditText) findViewById(R.id.username);
         password = (EditText) findViewById(R.id.password);
         btnLogin = (Button)findViewById(R.id.login);
+        company = (AutoCompleteTextView)findViewById(R.id.company);
         exit = (Button)findViewById(R.id.exit);
         sharedpreferences = getSharedPreferences("LOGIN", this.MODE_PRIVATE);
         db.createLogin();
         mApiInterface = ApiClient.getClient().create(LoginInterface.class);
+
+        AutoCompleteTextView simpleAutoCompleteTextView = (AutoCompleteTextView) findViewById(R.id.company);
+        ArrayAdapter adapter = new ArrayAdapter(this, android.R.layout.simple_list_item_1, companyList);
+
+        simpleAutoCompleteTextView.setAdapter(adapter);
+        simpleAutoCompleteTextView.setThreshold(3);//start searching from 3 character
+        simpleAutoCompleteTextView.setAdapter(adapter);
+
         exit.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -99,11 +113,26 @@ public class Activity_Login extends AppCompatActivity {
         boolean valid = true;
         String UserName = username.getText().toString();
         String Password = password.getText().toString();
+        String Company = company.getText().toString();
 
         if (UserName.isEmpty()) {
             valid = false;
             AlertDialog.Builder builder = new AlertDialog.Builder(Activity_Login.this);
             builder.setMessage("Email tidak boleh kosong!")
+                    .setNegativeButton("Retry", null).create().show();
+        }
+
+        if (Company.isEmpty()) {
+            valid = false;
+            AlertDialog.Builder builder = new AlertDialog.Builder(Activity_Login.this);
+            builder.setMessage("Company tidak boleh kosong!")
+                    .setNegativeButton("Retry", null).create().show();
+        }
+
+        if(!getKoneksiDomain()){
+            valid = false;
+            AlertDialog.Builder builder = new AlertDialog.Builder(Activity_Login.this);
+            builder.setMessage("Company tidak terdaftar!")
                     .setNegativeButton("Retry", null).create().show();
         }
 
@@ -133,8 +162,8 @@ public class Activity_Login extends AppCompatActivity {
     }
 
     private void getDataLogin() {
-        Call<LoginModel>getData = mApiInterface.getLogin(username.getText().toString(),password.getText().toString());
-
+        Call<LoginModel>getData = mApiInterface.getLogin(username.getText().toString(),password.getText().toString(),company.getText().toString());
+        mHelper = new InputDbHelper(this);
         getData.enqueue(new Callback<LoginModel>() {
             @Override
             public void onResponse(Call<LoginModel> call, retrofit2.Response<LoginModel> response) {
@@ -173,7 +202,6 @@ public class Activity_Login extends AppCompatActivity {
                     startActivityForResult(intent, REQUEST_CODE);
                 }
 
-
             }
 
             @Override
@@ -207,6 +235,53 @@ public class Activity_Login extends AppCompatActivity {
                 }
             }
         });
+    }
+
+    private boolean getKoneksiDomain(){
+        boolean valid = false;
+        try {
+            SQLiteDatabase db = mHelper.getWritableDatabase();
+            String edtBase = "";
+            String edtWeb = "";
+            String currentBase = "";
+            if((company.getText().toString()).equals("Demo") ){
+                edtBase = "https://demo.rasb.co.id/api/";
+                edtWeb = "https://demo.rasb.co.id/";
+            }else if (company.getText().toString().equals("Gambiran")){
+                edtBase = "https://gambiran.rasb.co.id/api/";
+                edtWeb = "https://gambiran.rasb.co.id/";
+            }else if (company.getText().toString().equals("Malingping")){
+                edtBase = "https://malingping.rasb.co.id/api/";
+                edtWeb = "https://malingping.rasb.co.id/";
+            }else if (company.getText().toString().equals("RASB")){
+                edtBase = "https://rasb.co.id/api/";
+                edtWeb = "https://rasb.co.id/";
+            }
+
+            if (edtBase.isEmpty()){
+                return false;
+            }
+
+            Cursor cursor  =  mHelper.getSetting();
+            if (cursor.moveToFirst()) {
+                currentBase = cursor.getString(cursor.getColumnIndex(BASE_URL));
+            }
+
+            ContentValues values_header = new ContentValues();
+            values_header.put(BASE_URL,   edtBase);
+            values_header.put(WEB_URL,   edtWeb);
+
+            String whereClause = BASE_URL+"=?";
+            String [] whereArgs = {currentBase};
+            db.updateWithOnConflict(TABLE_SETTING,values_header,whereClause,whereArgs,SQLiteDatabase.CONFLICT_REPLACE);
+
+            valid = true;
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return valid;
     }
 
     private void pushToken(final Integer id_user,final String token) {

@@ -23,6 +23,8 @@ import androidx.core.app.ComponentActivity.ExtraData
 import androidx.core.content.ContextCompat.getSystemService
 import android.icu.lang.UCharacter.GraphemeClusterBreak.T
 import android.content.Intent
+import androidx.appcompat.app.ActionBar
+import androidx.appcompat.widget.AppCompatTextView
 import androidx.appcompat.widget.Toolbar
 
 class Activity_Register_Linen : AppCompatActivity(), View.OnClickListener {
@@ -35,7 +37,7 @@ class Activity_Register_Linen : AppCompatActivity(), View.OnClickListener {
 
     private lateinit var textView_title: TextView
     private lateinit var mSharedPreferences: SharedPreferences
-
+    private lateinit var mSharedPreferencesMode: SharedPreferences
 
     private  var mToast: Toast? = null
     private lateinit var toolbar: Toolbar
@@ -54,25 +56,15 @@ class Activity_Register_Linen : AppCompatActivity(), View.OnClickListener {
         Util.initSoundPool(this)
 
         mSharedPreferences = getSharedPreferences("UHF", MODE_PRIVATE)
+        mSharedPreferencesMode = getSharedPreferences("MODE", MODE_PRIVATE)
 
-//        toolbar = findViewById(R.id.toolbar)
-//        setSupportActionBar(toolbar)
-        getSupportActionBar()?.setTitle("Register Linen")
 
-//        toolbar.title =  "Register Linen"
-//        toolbar.setNavigationIcon(R.drawable.ic_arrow_back_black_24dp)
-//
-//        toolbar?.setNavigationOnClickListener {
-//            startActivity(
-//                Intent(
-//                    applicationContext,
-//                    Activity_Setting::class.java
-//                )
-//            )
-//        }
-
-        getSupportActionBar()?.setDisplayHomeAsUpEnabled(true)
-        getSupportActionBar()?.setDisplayShowHomeEnabled(true)
+        supportActionBar?.setCustomView(R.layout.abs_layout)
+        supportActionBar?.setDisplayOptions(ActionBar.DISPLAY_SHOW_CUSTOM)
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        supportActionBar?.setDisplayShowHomeEnabled(true)
+        val title = supportActionBar?.customView?.findViewById<AppCompatTextView>(R.id.tvTitle)
+        title?.text = "REGISTER LINEN"
 
     }
 
@@ -102,29 +94,31 @@ class Activity_Register_Linen : AppCompatActivity(), View.OnClickListener {
     override fun onResume() {
         super.onResume()
         try{
-            mUhfrManager = UHFRManager.getIntance()// Init Uhf module
-            if (mUhfrManager != null) {
-                mUhfrManager.setPower(
-                    mSharedPreferences.getInt("readPower", 30),
-                    mSharedPreferences.getInt("writePower", 30)
-                )//set uhf module power
-                mUhfrManager.region =
-                    Reader.Region_Conf.valueOf(mSharedPreferences.getInt("freRegion", 1))
-                Toast.makeText(
-                    applicationContext,
-                    "FreRegion:" + Reader.Region_Conf.valueOf(
-                        mSharedPreferences.getInt(
-                            "freRegion",
-                            1
-                        )
-                    ) +
-                            "\n" + "Read Power:" + mSharedPreferences.getInt("readPower", 30) +
-                            "\n" + "Write Power:" + mSharedPreferences.getInt("writePower", 30),
-                    Toast.LENGTH_LONG
-                ).show()
-                showToast(getString(R.string.inituhfsuccess))
-            } else {
-                showToast(getString(R.string.inituhffail))
+            if (mSharedPreferencesMode.getBoolean("MODE", false)) {
+                mUhfrManager = UHFRManager.getIntance()// Init Uhf module
+                if (mUhfrManager != null) {
+                    mUhfrManager.setPower(
+                        mSharedPreferences.getInt("readPower", 30),
+                        mSharedPreferences.getInt("writePower", 30)
+                    )//set uhf module power
+                    mUhfrManager.region =
+                        Reader.Region_Conf.valueOf(mSharedPreferences.getInt("freRegion", 1))
+                    Toast.makeText(
+                        applicationContext,
+                        "FreRegion:" + Reader.Region_Conf.valueOf(
+                            mSharedPreferences.getInt(
+                                "freRegion",
+                                1
+                            )
+                        ) +
+                                "\n" + "Read Power:" + mSharedPreferences.getInt("readPower", 30) +
+                                "\n" + "Write Power:" + mSharedPreferences.getInt("writePower", 30),
+                        Toast.LENGTH_LONG
+                    ).show()
+                    showToast(getString(R.string.inituhfsuccess))
+                } else {
+                    showToast(getString(R.string.inituhffail))
+                }
             }
         }catch (e: Throwable) {
             showToast("Device ini tidak mendukung..")

@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:background="@color/grey100"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="horizontal">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="7dp"
+        android:orientation="horizontal">
+        <TextView
+            android:layout_width="30dp"
+            android:layout_height="wrap_content"
+            android:gravity="left"
+            android:visibility="gone"
+            android:layout_margin="5dp"
+            android:text="No"
+            android:id="@+id/textView_id" />
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_gravity="right"
+            android:layout_height="wrap_content"
+            android:paddingRight="10dp"
+            app:srcCompat="@drawable/handuk"></ImageView>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:id="@+id/row1"
+                android:layout_height="wrap_content"
+                android:paddingBottom="5dp"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_height="wrap_content"
+                    android:text="Nama Barang"
+                    android:textStyle="bold"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:textColor="#343434"
+                    android:textSize="13sp" />
+                <TextView
+                    android:id="@+id/textView_epc"
+                    android:layout_width="0dp"
+                    android:layout_weight="0.4"
+                    android:layout_height="wrap_content"
+                    android:text="EPC"
+                    android:textAlignment="textEnd"
+                    android:textColor="#040404"
+                    android:textSize="13dp"
+                    android:textStyle="bold"
+                    android:typeface="sans" />
+            </LinearLayout>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/row1"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/textView_barang"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:text=""
+                    android:layout_weight="1"
+                    android:textColor="#475467"
+                    android:textSize="13dp"/>
+
+                <TextView
+                    android:id="@+id/textView_berat"
+                    android:layout_width="0dp"
+                    android:layout_weight="0.2"
+                    android:layout_height="wrap_content"
+                    android:text="3"
+                    android:textStyle="bold"
+                    android:textColor="#343434"
+                    android:textAlignment="textEnd"
+                    android:textSize="13dp" />
+                <TextView
+                    android:layout_width="25dp"
+                    android:layout_height="wrap_content"
+                    android:text="Kg"
+                    android:textAlignment="textStart"
+                    android:textColor="#040404"
+                    android:paddingLeft="5dp"
+                    android:textSize="13dp"
+                    android:textStyle="bold"
+                    android:typeface="sans" />
+            </LinearLayout>
+        </LinearLayout>
+    </LinearLayout>
+
+</RelativeLayout>

@@ -4,8 +4,10 @@ import android.app.DatePickerDialog;
 import android.content.BroadcastReceiver;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
@@ -26,13 +28,17 @@ import android.widget.CompoundButton;
 import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.DatePicker;
 import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.AppCompatTextView;
 import androidx.appcompat.widget.Toolbar;
 import androidx.cursoradapter.widget.SimpleCursorAdapter;
 import androidx.fragment.app.Fragment;
@@ -43,6 +49,7 @@ import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
+import com.google.gson.Gson;
 import com.uhf.api.cls.Reader.TAGINFO;
 
 import org.json.JSONException;
@@ -52,6 +59,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Formatter;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -73,16 +81,37 @@ import static id.coba.kotlinpintar.InputDbHelper.TABLE_RUSAK;
 import static id.coba.kotlinpintar.InputDbHelper.TABLE_RUSAK_DETAIL;
 import static id.coba.kotlinpintar.Rest.ApiClient.BASE_URL;
 
+import id.coba.kotlinpintar.Component.APIError;
+import id.coba.kotlinpintar.Component.LoadingDialog;
+import id.coba.kotlinpintar.Dto.DataKotor;
+import id.coba.kotlinpintar.Dto.DataRusak;
+import id.coba.kotlinpintar.Dto.Delete;
+import id.coba.kotlinpintar.Dto.JumlahCuci;
+import id.coba.kotlinpintar.Dto.KotorListResponse;
+import id.coba.kotlinpintar.Dto.LastHistory;
+import id.coba.kotlinpintar.Dto.LinenKeluar;
+import id.coba.kotlinpintar.Dto.LinenKeluarDetail;
+import id.coba.kotlinpintar.Dto.LinenKotorDetail;
+import id.coba.kotlinpintar.Dto.LinenRusak;
+import id.coba.kotlinpintar.Dto.LinenRusakDetail;
+import id.coba.kotlinpintar.Dto.RusakListResponse;
+import id.coba.kotlinpintar.Dto.Serial;
+import id.coba.kotlinpintar.Helper.Helper;
+import id.coba.kotlinpintar.Rest.ApiClient;
+import id.coba.kotlinpintar.Rest.ApiInterface;
+import retrofit2.Call;
+import retrofit2.Callback;
+
 public class Fragment_Rusak extends Fragment implements OnCheckedChangeListener,OnClickListener{
     private View view;// this fragment UI
     private TextView tvTagSum ;
+    private TextView txtTambah ;
     private TextView tvTagSumBerat ;
     private ListView lvEpc;// epc list view
-    private Button btnStart ;//inventory button
-    private Button btnClear ;// clear button
+    private Button btnStart ;
+    private Button btnDelete ;
+    private ImageView btnUlangi ;// clear button
     private Button btnSimpan ;
-    private Button btnSync ;
-    private Button btnRemove ;
     private EditText edittext;
     private EditText noTransaksi;
     private EditText tgl;
@@ -91,7 +120,7 @@ public class Fragment_Rusak extends Fragment implements OnCheckedChangeListener,
     private Spinner spinner_defect;
     private ArrayList<HashMap> listEpc;
     private EditText txtScan;
-
+    private LinearLayout empty_layout;
     private Set<String> epcSet = null ;
     //    private List<HashMap> listEpc = null;//EPC list
     private HashMap mapEpc;
@@ -110,6 +139,8 @@ public class Fragment_Rusak extends Fragment implements OnCheckedChangeListener,
     private SimpleCursorAdapter adapterPIC ;
     private SimpleCursorAdapter adapterDefect ;
     private SimpleCursorAdapter adapterRuangan ;
+    private SharedPreferences prefMode;
+    ApiInterface apiInterface;
     //handler
     private Handler handler = new Handler(){
         @Override
@@ -155,6 +186,7 @@ public class Fragment_Rusak extends Fragment implements OnCheckedChangeListener,
 
                         adapter = new EPCRusakAdapter(getActivity(), listEpc);
                         lvEpc.setAdapter(adapter);
+                        Helper.getListViewSize(lvEpc);
 
                         Util.play(1, 0);
                         RusakActivity.mSetEpcs=epcSet;
@@ -187,9 +219,9 @@ public class Fragment_Rusak extends Fragment implements OnCheckedChangeListener,
                         }
 
                         tvTagSum.setText("" + listEpc.size());
-
                         adapter.notifyDataSetChanged();
-                        txtScan.setText("");
+                        Helper.getListViewSize(lvEpc);
+
                     }
 
                     break ;
@@ -200,6 +232,8 @@ public class Fragment_Rusak extends Fragment implements OnCheckedChangeListener,
     public View onCreateView(LayoutInflater inflater,
                              @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         view= inflater.inflate(R.layout.fragment_rusak, null);
+        apiInterface = ApiClient.getClient().create(ApiInterface.class);
+        prefMode = getContext().getSharedPreferences("MODE", Context.MODE_PRIVATE);
         initView();
 
 
@@ -218,7 +252,7 @@ public class Fragment_Rusak extends Fragment implements OnCheckedChangeListener,
         double tb =Float.parseFloat(tvTagSumBerat.getText().toString());
         Float litersOfPetrol=Float.parseFloat(berat);
         tb += litersOfPetrol;
-        tvTagSumBerat.setText( String.format("%.1f", tb) );
+        tvTagSumBerat.setText( new Formatter(Locale.ENGLISH).format("%.1f", tb).toString() );
     }
 
     private void initView() {
@@ -226,13 +260,15 @@ public class Fragment_Rusak extends Fragment implements OnCheckedChangeListener,
         btnStart = (Button) view.findViewById(R.id.button_start);
         tvTagSum = (TextView) view.findViewById(R.id.textView_tag) ;
         tvTagSumBerat = (TextView) view.findViewById(R.id.textView_total_berat) ;
-        btnClear = (Button) view.findViewById(R.id.button_clear_epc) ;
+        btnUlangi = (ImageView) view.findViewById(R.id.btnUlangi) ;
         btnSimpan = (Button) view.findViewById(R.id.button_simpan) ;
-        btnSync = (Button) view.findViewById(R.id.button_sync) ;
-        btnRemove = (Button) view.findViewById(R.id.button_remove) ;
+        btnDelete = (Button) view.findViewById(R.id.button_delete) ;
         edittext= (EditText) view.findViewById(R.id.tanggal);
         spinner_pic= view.findViewById(R.id.spinner_pic);
         spinner_defect= view.findViewById(R.id.spinner_defect);
+        txtTambah = (TextView) view.findViewById(R.id.txtTambah) ;
+        empty_layout= (LinearLayout)view.findViewById(R.id.layout_empty);
+        lvEpc.setEmptyView(empty_layout);
 
         noTransaksi= (EditText) view.findViewById(R.id.no_transaksi);
         setAutoNumber();
@@ -240,95 +276,167 @@ public class Fragment_Rusak extends Fragment implements OnCheckedChangeListener,
         tgl= (EditText) view.findViewById(R.id.tanggal);
         txtCatatan= (EditText) view.findViewById(R.id.catatan);
 
-
         lvEpc.setFocusable(false);
         lvEpc.setClickable(false);
         lvEpc.setItemsCanFocus(false);
         lvEpc.setScrollingCacheEnabled(false);
         lvEpc.setOnItemClickListener(null);
         btnStart.setOnClickListener(this);
-        btnClear.setOnClickListener(this);
+        btnUlangi.setOnClickListener(this);
         btnSimpan.setOnClickListener(this);
-        btnSync.setOnClickListener(this);
-        btnRemove.setOnClickListener(this);
+        btnDelete.setOnClickListener(this);
         edittext.setOnClickListener(this);
         txtScan= (EditText) view.findViewById(R.id.textView_scan);
         txtScan.setOnKeyListener(new View.OnKeyListener() {
             @Override
             public boolean onKey(View v, int keyCode, KeyEvent event) {
                 if ((keyCode == KeyEvent.KEYCODE_ENTER)) {
-                    String epc = txtScan.getText().toString().replace("\n","");
-                    Message msg = new Message();
-                    msg.what = 1;
-                    Bundle b = new Bundle();
-                    b.putString("epc", epc);
-
-                    try {
-                        SQLiteDatabase db = mHelper.getReadableDatabase();
-
-                        String selectQuery = "SELECT A.*,B.jenis,B.berat FROM " + TABLE_BARANG + " A JOIN " + TABLE_JENIS_BARANG + " B ON A.ID_JENIS=B.ID_JENIS WHERE serial='" + epc + "'";
-                        Cursor cursor_header = db.rawQuery(selectQuery, null);
-
-                        String berat = "0";
-                        String jenis = "";
-                        b.putString("exist", "0");
-                        while (cursor_header.moveToNext()) {
-                            String ruangan = cursor_header.getString(cursor_header.getColumnIndex(InputDbHelper.NAMA_RUANGAN));
-                            jenis = cursor_header.getString(cursor_header.getColumnIndex(InputDbHelper.JENIS));
-                            berat = cursor_header.getString(cursor_header.getColumnIndex(InputDbHelper.BERAT));
-
-                            b.putString("rssi", ruangan);
-                            b.putString("item", jenis);
-                            b.putString("berat", berat);
-
-                            String exist = "";
-                            selectQuery = "SELECT b.* FROM linen_rusak a " +
-                                    "JOIN linen_rusak_detail b ON a.transaksi=b.transaksi " +
-                                    "WHERE epc='" + epc + "' AND a.transaksi<>'" + noTransaksi.getText().toString() + "'";
-                            Cursor cursor_exist = db.rawQuery(selectQuery, null);
-                            while (cursor_exist.moveToNext()) {
-                                exist = "1";
-                            }
-                            b.putString("exist", exist);
-                        }
-
-                        selectQuery = "SELECT COUNT(*) jml " +
-                                "FROM linen_kotor a " +
-                                "JOIN linen_kotor_detail b ON a.transaksi=b.transaksi " +
-                                "WHERE epc='" + epc + "'";
-                        Cursor cursor_jml_cuci = db.rawQuery(selectQuery, null);
-                        String jml_cuci = "0";
-                        b.putString("cuci", jml_cuci);
-                        while (cursor_jml_cuci.moveToNext()) {
-                            jml_cuci = cursor_jml_cuci.getString(cursor_jml_cuci.getColumnIndex("jml"));
-                            b.putString("cuci", jml_cuci);
-                        }
-                        msg.setData(b);
-                        handler.sendMessage(msg);
-                    } catch (Exception ex) {
-
-                    }
+                    manualscan();
                 }
                 return false;
             }
         });
-
+        txtTambah.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                manualscan();
+            }
+        });
         mHelper = new InputDbHelper(getActivity());
         tvTagSumBerat.setText("0");
+
+        if(prefMode.getBoolean("MODE", false) == true){
+            btnStart.setEnabled(true);
+        }else{
+            btnStart.setEnabled(false);
+        }
 
         updateLabel();
         loadspinner();
         String no = getArguments().getString("no_transaksi");
 
         if (no != null){
-            updateUI(no);
+            updateUIBaru(no);
         }
-        ((AppCompatActivity)getActivity()).getSupportActionBar().setTitle(Html.fromHtml("<font color='#ff0000'>Form Linen Rusak</font>"));
+        ((AppCompatActivity)getActivity()).getSupportActionBar().setCustomView(R.layout.abs_layout);
+        ((AppCompatActivity)getActivity()).getSupportActionBar().setDisplayOptions(androidx.appcompat.app.ActionBar.DISPLAY_SHOW_CUSTOM);
         ((AppCompatActivity)getActivity()).getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         ((AppCompatActivity)getActivity()).getSupportActionBar().setDisplayShowHomeEnabled(true);
+        AppCompatTextView title = ((AppCompatActivity)getActivity()).getSupportActionBar().getCustomView().findViewById(R.id.tvTitle);
+        title.setText("Form Linen Rusak");
 
     }
 
+    private void manualscan(){
+        String epc = txtScan.getText().toString().replace("\n","");
+        txtScan.setText("");
+        Message msg = new Message();
+        msg.what = 1;
+        Bundle b = new Bundle();
+        b.putString("epc", epc);
+
+        try {
+            Call<Serial> call2 = apiInterface.infoSerial(epc);
+            call2.enqueue(new Callback<Serial>() {
+                @Override
+                public void onResponse(Call<Serial> call, retrofit2.Response<Serial> response) {
+                    Serial userList = response.body();
+                    if(userList != null) {
+                        List<Serial.Datum> datumList = userList.data;
+                        String message = userList.message;
+                        for (Serial.Datum datum : datumList) {
+                            b.putString("rssi", datum.ruangan);
+                            b.putString("item", datum.jenis);
+                            b.putString("berat", datum.berat);
+                            b.putString("exist", "");
+                            b.putString("cuci", "0");
+
+                            Call<JumlahCuci> callJumlahCuci = apiInterface.getJumlahCuci(epc);
+                            callJumlahCuci.enqueue(new Callback<JumlahCuci>() {
+                                @Override
+                                public void onResponse(Call<JumlahCuci> call, retrofit2.Response<JumlahCuci> response) {
+                                    JumlahCuci history = response.body();
+                                    List<JumlahCuci.Datum> historyDatum = history.data;
+                                    for (JumlahCuci.Datum datum : historyDatum) {
+                                        b.putString("cuci", datum.jml);
+                                    }
+                                    msg.setData(b);
+                                    handler.sendMessage(msg);
+                                }
+
+                                @Override
+                                public void onFailure(Call<JumlahCuci> call3, Throwable t) {
+                                    call3.cancel();
+                                }
+                            });
+                        }
+                    }else{
+                        b.putString("rssi", "");
+                        b.putString("item", "");
+                        b.putString("berat", "0");
+                        b.putString("exist", "");
+                        b.putString("cuci", "0");
+
+                        msg.setData(b);
+                        handler.sendMessage(msg);
+                    }
+                }
+                @Override
+                public void onFailure(Call<Serial> call, Throwable t) {
+                    call.cancel();
+                    txtScan.setText("");
+                    Toast.makeText(getContext(), t.getMessage(), Toast.LENGTH_SHORT).show();
+                }
+            });
+        }catch (Exception ex) {
+            Toast.makeText(getContext(), ex.getMessage(), Toast.LENGTH_SHORT).show();
+        }
+
+        /*try {
+            SQLiteDatabase db = mHelper.getReadableDatabase();
+
+            String selectQuery = "SELECT A.*,B.jenis,B.berat FROM " + TABLE_BARANG + " A JOIN " + TABLE_JENIS_BARANG + " B ON A.ID_JENIS=B.ID_JENIS WHERE serial='" + epc + "'";
+            Cursor cursor_header = db.rawQuery(selectQuery, null);
+
+            String berat = "0";
+            String jenis = "";
+            b.putString("exist", "0");
+            while (cursor_header.moveToNext()) {
+                String ruangan = cursor_header.getString(cursor_header.getColumnIndex(InputDbHelper.NAMA_RUANGAN));
+                jenis = cursor_header.getString(cursor_header.getColumnIndex(InputDbHelper.JENIS));
+                berat = cursor_header.getString(cursor_header.getColumnIndex(InputDbHelper.BERAT));
+
+                b.putString("rssi", ruangan);
+                b.putString("item", jenis);
+                b.putString("berat", berat);
+
+                String exist = "";
+                selectQuery = "SELECT b.* FROM linen_rusak a " +
+                        "JOIN linen_rusak_detail b ON a.transaksi=b.transaksi " +
+                        "WHERE epc='" + epc + "' AND a.transaksi<>'" + noTransaksi.getText().toString() + "'";
+                Cursor cursor_exist = db.rawQuery(selectQuery, null);
+                while (cursor_exist.moveToNext()) {
+                    exist = "1";
+                }
+                b.putString("exist", exist);
+            }
+
+            selectQuery = "SELECT COUNT(*) jml " +
+                    "FROM linen_kotor a " +
+                    "JOIN linen_kotor_detail b ON a.transaksi=b.transaksi " +
+                    "WHERE epc='" + epc + "'";
+            Cursor cursor_jml_cuci = db.rawQuery(selectQuery, null);
+            String jml_cuci = "0";
+            b.putString("cuci", jml_cuci);
+            while (cursor_jml_cuci.moveToNext()) {
+                jml_cuci = cursor_jml_cuci.getString(cursor_jml_cuci.getColumnIndex("jml"));
+                b.putString("cuci", jml_cuci);
+            }
+            msg.setData(b);
+            handler.sendMessage(msg);
+        } catch (Exception ex) {
+        }*/
+    }
     private void loadspinner() {
 
         InputDbHelper db = new InputDbHelper(getActivity());
@@ -405,15 +513,7 @@ public class Fragment_Rusak extends Fragment implements OnCheckedChangeListener,
                     if (isMulti) { // multi mode
                         list1 = RusakActivity.mUhfrManager.tagInventoryRealTime();
                     }else{
-                        //sleep can save electricity
-//						try {
-//							Thread.sleep(250);
-//						} catch (InterruptedException e) {
-//							e.printStackTrace();
-//						}
                         list1 = RusakActivity.mUhfrManager.tagInventoryByTimer((short)50);
-                        //inventory epc + tid
-//                        list1 = RusakActivity.mUhfrManager.tagEpcTidInventoryByTimer((short) 50);
                     }
                     if (list1 != null&&list1.size()>0) {//
                         for (TAGINFO tfs:list1) {
@@ -426,66 +526,62 @@ public class Fragment_Rusak extends Fragment implements OnCheckedChangeListener,
                             Bundle b = new Bundle();
                             b.putString("epc", epc);
 
-                            SQLiteDatabase db = mHelper.getReadableDatabase();
+                            try {
+                                Call<Serial> call2 = apiInterface.infoSerial(epc);
+                                call2.enqueue(new Callback<Serial>() {
+                                    @Override
+                                    public void onResponse(Call<Serial> call, retrofit2.Response<Serial> response) {
+                                        Serial userList = response.body();
+                                        if(userList != null) {
+                                            List<Serial.Datum> datumList = userList.data;
+                                            String message = userList.message;
+                                            for (Serial.Datum datum : datumList) {
+                                                b.putString("rssi", datum.ruangan);
+                                                b.putString("item", datum.jenis);
+                                                b.putString("berat", datum.berat);
+                                                b.putString("exist", "");
+                                                b.putString("cuci", "0");
 
-                            String selectQuery = "SELECT A.*,B.jenis,B.berat FROM " + TABLE_BARANG + " A JOIN " + TABLE_JENIS_BARANG + " B ON A.ID_JENIS=B.ID_JENIS WHERE serial='" + epc + "'";
-                            Cursor cursor_header = db.rawQuery(selectQuery, null);
+                                                Call<JumlahCuci> callJumlahCuci = apiInterface.getJumlahCuci(epc);
+                                                callJumlahCuci.enqueue(new Callback<JumlahCuci>() {
+                                                    @Override
+                                                    public void onResponse(Call<JumlahCuci> call, retrofit2.Response<JumlahCuci> response) {
+                                                        JumlahCuci history = response.body();
+                                                        List<JumlahCuci.Datum> historyDatum = history.data;
+                                                        for (JumlahCuci.Datum datum : historyDatum) {
+                                                            b.putString("cuci", datum.jml);
+                                                        }
+                                                    }
 
-                            String berat = "0";
-                            String jenis = "";
-                            b.putString("exist", "0");
-                            while (cursor_header.moveToNext()) {
-                                String ruangan = cursor_header.getString(cursor_header.getColumnIndex(InputDbHelper.NAMA_RUANGAN));
-                                jenis = cursor_header.getString(cursor_header.getColumnIndex(InputDbHelper.JENIS));
-                                berat = cursor_header.getString(cursor_header.getColumnIndex(InputDbHelper.BERAT));
+                                                    @Override
+                                                    public void onFailure(Call<JumlahCuci> call3, Throwable t) {
+                                                        call3.cancel();
+                                                    }
+                                                });
+                                            }
+                                        }else{
+                                            b.putString("rssi", "");
+                                            b.putString("item", "");
+                                            b.putString("berat", "0");
+                                            b.putString("exist", "");
+                                            b.putString("cuci", "0");
+                                        }
 
-                                b.putString("rssi", ruangan);
-                                b.putString("item", jenis);
-                                b.putString("berat", berat);
-
-                                String exist = "";
-                                selectQuery = "SELECT b.* FROM linen_rusak a " +
-                                        "JOIN linen_rusak_detail b ON a.transaksi=b.transaksi " +
-                                        "WHERE epc='" + epc +"' AND a.transaksi<>'" + noTransaksi.getText().toString() + "'";
-                                Cursor cursor_exist = db.rawQuery(selectQuery, null);
-                                while (cursor_exist.moveToNext()) {
-                                    exist = "1";
-                                }
-                                b.putString("exist", exist);
+                                        msg.setData(b);
+                                        handler.sendMessage(msg);
+                                    }
+                                    @Override
+                                    public void onFailure(Call<Serial> call, Throwable t) {
+                                        call.cancel();
+                                        txtScan.setText("");
+                                        Toast.makeText(getContext(), t.getMessage(), Toast.LENGTH_SHORT).show();
+                                    }
+                                });
+                            }catch (Exception ex) {
+                                Toast.makeText(getContext(), ex.getMessage(), Toast.LENGTH_SHORT).show();
                             }
-
-                            selectQuery = "SELECT COUNT(*) jml " +
-                                    "FROM linen_kotor a " +
-                                    "JOIN linen_kotor_detail b ON a.transaksi=b.transaksi " +
-                                    "WHERE epc='" + epc + "'";
-                            Cursor cursor_jml_cuci = db.rawQuery(selectQuery, null);
-                            String jml_cuci = "0";
-                            b.putString("cuci", jml_cuci);
-                            while (cursor_jml_cuci.moveToNext()) {
-                                jml_cuci = cursor_jml_cuci.getString(cursor_jml_cuci.getColumnIndex("jml"));
-                                b.putString("cuci", jml_cuci);
-                            }
-                            msg.setData(b);
-                            handler.sendMessage(msg);
                         }
                     }
-                    //inventory epc + tid
-//                    if (list1 != null && list1.size() > 0) {
-//                        for (TAGINFO tfs : list1) {
-//                            byte[] epcdata = tfs.EpcId;
-//                            epc = Tools.Bytes2HexString(epcdata, epcdata.length);
-//                            int rssi = tfs.RSSI;
-//                            String tid = Tools.Bytes2HexString(tfs.EmbededData, tfs.EmbededDatalen);
-//                            Log.e("Huang, Fragment1", "tid = " + tid);
-//                            Message msg = new Message();
-//                            msg.what = 1;
-//                            Bundle b = new Bundle();
-//                            b.putString("epc", epc);
-////                            b.putString("rssi", rssi + "");
-//                            msg.setData(b);
-//                            handler.sendMessage(msg);
-//                        }
-//                    }
                 }
             }
         }
@@ -495,7 +591,7 @@ public class Fragment_Rusak extends Fragment implements OnCheckedChangeListener,
         if (keyControl) {
             keyControl = false;
             if (!isStart) {
-                if(KotorActivity.mUhfrManager == null){
+                if(RusakActivity.mUhfrManager == null){
                     showToast("Fungsi ini berlaku hanya untuk handheld");
                 }else{
                     RusakActivity.mUhfrManager.setCancleInventoryFilter();
@@ -532,7 +628,6 @@ public class Fragment_Rusak extends Fragment implements OnCheckedChangeListener,
     }
     @Override
     public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-        // TODO Auto-generated method stub
         if (isChecked) isMulti = true;
         else isMulti = false;
     }
@@ -543,15 +638,48 @@ public class Fragment_Rusak extends Fragment implements OnCheckedChangeListener,
             case R.id.button_start:
                 runInventory() ;
                 break ;
-            case R.id.button_clear_epc:
+            case R.id.btnUlangi:
                 clearEpc();
                 break ;
             case R.id.button_sync:
-                updateUI("");
-                showToast("Sync sukses.");
+                /*updateUI("");
+                showToast("Sync sukses.");*/
                 break ;
-            case R.id.button_remove:
+            case R.id.button_delete:
 
+                AlertDialog alertDialog_delete = new AlertDialog.Builder(getActivity()).create();
+                alertDialog_delete.setTitle("Yakin akan di hapus?");
+                alertDialog_delete.setMessage("Linen ini akan dihapus dari linen rusak.");
+                alertDialog_delete.setButton(AlertDialog.BUTTON_POSITIVE, "OK", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        final LoadingDialog loadingDialog = new LoadingDialog(getActivity());
+                        loadingDialog.startLoadingDialog();
+                        Call<Delete> call2 = apiInterface.DeleteRusak(noTransaksi.getText().toString());
+                        call2.enqueue(new Callback<Delete>() {
+                            @Override
+                            public void onResponse(Call<Delete> call, retrofit2.Response<Delete> response) {
+                                System.out.println(response);
+                                Delete defaultResponse = response.body();
+                                if(defaultResponse == null && response.errorBody() != null){
+                                    APIError message = new Gson().fromJson(response.errorBody().charStream(), APIError.class);
+                                    Toast.makeText(getContext(), message.getMessage(), Toast.LENGTH_LONG).show();
+                                }else{
+                                    showToast("Sukses Menyimpan !!");
+                                    Intent intent = new Intent(getActivity(), ListRusakActivityRecycle.class);
+                                    startActivity(intent);
+                                }
+                                loadingDialog.dismissDialog();
+                            }
+                            @Override
+                            public void onFailure(Call<Delete> call, Throwable t) {
+                                call.cancel();
+                                loadingDialog.dismissDialog();
+                                Toast.makeText(getContext(), t.getMessage(), Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                    }
+                });
+                alertDialog_delete.show();
                 break ;
             case R.id.tanggal:
                 showTanggal();
@@ -584,7 +712,7 @@ public class Fragment_Rusak extends Fragment implements OnCheckedChangeListener,
                         exist = true;
                         Toast.makeText(getActivity(),"Serial " + num.get("epc") + " belum terdaftar..!",Toast.LENGTH_SHORT).show();
                     }
-                    if (num.get("exist").equals("1") && !num.get("item").equals("Tidak Terdaftar!")) {
+                    /*if (num.get("exist").equals("1") && !num.get("item").equals("Tidak Terdaftar!")) {
                         exist = true;
                         String selectQuery = "SELECT b.* FROM linen_rusak a " +
                                 "JOIN linen_rusak_detail b ON a.transaksi=b.transaksi " +
@@ -598,15 +726,73 @@ public class Fragment_Rusak extends Fragment implements OnCheckedChangeListener,
                             Toast.makeText(getActivity(),"Serial " + num.get("epc") + " telah berstatus rusak di transaksi " + noTransaksi  + "..!",Toast.LENGTH_SHORT).show();
                             break;
                         }
-                    }
-
+                    }*/
 
                 }
                 if(exist) {
                     break;
                 }
 
+                LinenRusak rusak = new LinenRusak();
+                rusak.NO_TRANSAKSI = no_transaksi;
+                rusak.TANGGAL = tanggal;
+                rusak.PIC = pic;
+                rusak.CATATAN = catatan;
+                rusak.DEFECT = defect;
+
                 View parentView = null;
+                for (int i = 0; i < lvEpc.getCount(); i++) {
+
+                    parentView = getViewByPosition(i, lvEpc);
+
+                    String epcName = ((TextView) parentView.findViewById(R.id.textView_epc)).getText().toString();
+                    String jml_cuci = ((TextView) parentView.findViewById(R.id.textView_jml_cuci)).getText().toString();
+
+                    LinenRusakDetail dtm = new LinenRusakDetail();
+                    dtm.epc = epcName;
+                    dtm.no_transaksi =  no_transaksi;
+                    dtm.jml_cuci = jml_cuci;
+                    rusak.detail.add(i,dtm);
+                }
+
+                AlertDialog alertDialog = new AlertDialog.Builder(getActivity()).create();
+                alertDialog.setTitle("Yakin akan di simpan?");
+                alertDialog.setMessage("Linen ini akan didaftarkan ke linen rusak.");
+
+                alertDialog.setButton(AlertDialog.BUTTON_POSITIVE, "OK", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        final LoadingDialog loadingDialog = new LoadingDialog(getActivity());
+                        loadingDialog.startLoadingDialog();
+                        Call<LinenRusak> call2 = apiInterface.saveLinenRusak(rusak);
+                        call2.enqueue(new Callback<LinenRusak>() {
+                            @Override
+                            public void onResponse(Call<LinenRusak> call, retrofit2.Response<LinenRusak> response) {
+                                System.out.println(response);
+                                LinenRusak defaultResponse = response.body();
+                                if(defaultResponse == null && response.errorBody() != null){
+                                    APIError message = new Gson().fromJson(response.errorBody().charStream(), APIError.class);
+                                    Toast.makeText(getContext(), message.getMessage(), Toast.LENGTH_LONG).show();
+                                }else{
+                                    if(defaultResponse.Error == false){
+                                        showToast("Sukses Menyimpan !!");
+                                        Intent intent = new Intent(getActivity(), ListRusakActivityRecycle.class);
+                                        startActivity(intent);
+                                    }
+                                }
+                                loadingDialog.dismissDialog();
+                            }
+                            @Override
+                            public void onFailure(Call<LinenRusak> call, Throwable t) {
+                                call.cancel();
+                                loadingDialog.dismissDialog();
+                                Toast.makeText(getContext(), t.getMessage(), Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                    }
+                });
+                alertDialog.show();
+
+                /* View parentView = null;
 
                 ContentValues values_header = new ContentValues();
 
@@ -644,7 +830,7 @@ public class Fragment_Rusak extends Fragment implements OnCheckedChangeListener,
                 showToast("Sukses menyimpan..");
                 syncOnlineDB();
                 Intent intent = new Intent(getActivity(), ListRusakActivity.class);
-                startActivity(intent);
+                startActivity(intent);*/
                 break ;
         }
     }
@@ -789,7 +975,68 @@ public class Fragment_Rusak extends Fragment implements OnCheckedChangeListener,
             return listView.getChildAt(childIndex);
         }
     }
+    private void updateUIBaru(String no){
+        epcSet = new HashSet<String>();
+        listEpc = new ArrayList<HashMap>();
 
+        String noTrans = noTransaksi.getText().toString();
+        btnSimpan.setVisibility(View.VISIBLE);
+        btnStart.setVisibility(View.VISIBLE);
+        btnDelete.setVisibility(View.GONE);
+
+        if(no != ""){
+            noTrans = no;
+            btnSimpan.setVisibility(View.GONE);
+            btnStart.setVisibility(View.GONE);
+            btnDelete.setVisibility(View.VISIBLE);
+        }
+
+        Call<RusakListResponse> call2 = apiInterface.getRusak(no);
+        call2.enqueue(new Callback<RusakListResponse>() {
+            @Override
+            public void onResponse(Call<RusakListResponse> call, retrofit2.Response<RusakListResponse> response) {
+                ArrayList<DataRusak> dataRusak = response.body().getData();
+                for (DataRusak data : dataRusak){
+                    noTransaksi.setText(data.getNO_TRANSAKSI());
+                    tgl.setText(data.getTANGGAL());
+                    txtCatatan.setText(data.getCATATAN());
+                    getIndexByString(spinner_pic,data.getPIC(),"nama_user");
+                    getIndexByString(spinner_defect,data.getDEFECT(),"defect");
+
+                    int i = 0;
+                    double tb = 0;
+
+                    List<LinenRusakDetail> datumList = data.getDetail();
+                    for (LinenRusakDetail datum : datumList) {
+                        mapEpc = new HashMap();
+                        epcSet.add(datum.epc);
+                        mapEpc.put(datum.epc, i);
+                        mapEpc.put("epc", datum.epc);
+                        mapEpc.put("item", datum.item);
+                        mapEpc.put("berat", datum.berat);
+                        mapEpc.put("cuci", datum.jml_cuci);
+                        listEpc.add(mapEpc);
+                        i++;
+
+                        Float litersOfPetrol=Float.parseFloat(datum.berat);
+                        tb += litersOfPetrol;
+                        tvTagSum.setText( String.valueOf(i) );
+                    }
+
+                    tvTagSumBerat.setText( new Formatter(Locale.ENGLISH).format("%.1f", tb).toString() );
+
+                    adapter = new EPCRusakAdapter(getActivity(), listEpc);
+                    lvEpc.setAdapter(adapter);
+                    Helper.getListViewSize(lvEpc);
+                }
+            }
+            @Override
+            public void onFailure(Call<RusakListResponse> call, Throwable t) {
+                call.cancel();
+                Toast.makeText(getContext(), t.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
     private void updateUI(String no ) {
         epcSet = new HashSet<String>();
         listEpc = new ArrayList<HashMap>();
@@ -800,13 +1047,11 @@ public class Fragment_Rusak extends Fragment implements OnCheckedChangeListener,
         String noTrans = noTransaksi.getText().toString();
         btnSimpan.setVisibility(View.VISIBLE);
         btnStart.setVisibility(View.VISIBLE);
-        btnClear.setVisibility(View.VISIBLE);
 
         if(no != ""){
             noTrans = no;
             btnSimpan.setVisibility(View.GONE);
             btnStart.setVisibility(View.GONE);
-            btnClear.setVisibility(View.GONE);
         }
 
         String whereClause = InputContract.TaskEntry.NO_TRANSAKSI+"=?";
@@ -877,7 +1122,7 @@ public class Fragment_Rusak extends Fragment implements OnCheckedChangeListener,
             tvTagSum.setText( String.valueOf(i) );
         }
 
-        tvTagSumBerat.setText( String.format("%.1f", tb) );
+        tvTagSumBerat.setText( new Formatter(Locale.ENGLISH).format("%.1f", tb).toString() );
 
         adapter = new EPCRusakAdapter(getActivity(), listEpc);
         lvEpc.setAdapter(adapter);

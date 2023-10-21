@@ -5,6 +5,7 @@ import android.app.DatePickerDialog;
 import android.content.BroadcastReceiver;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
@@ -34,6 +35,7 @@ import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.GridView;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.Spinner;
@@ -42,7 +44,9 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.AppCompatTextView;
 import androidx.appcompat.widget.Toolbar;
 import androidx.cursoradapter.widget.SimpleCursorAdapter;
 import androidx.fragment.app.Fragment;
@@ -53,15 +57,18 @@ import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
+import com.google.gson.Gson;
 import com.uhf.api.cls.Reader.TAGINFO;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Formatter;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -91,14 +98,41 @@ import static id.coba.kotlinpintar.InputDbHelper.TOTAL_BERAT;
 import static id.coba.kotlinpintar.InputDbHelper.TOTAL_QTY;
 import static id.coba.kotlinpintar.Rest.ApiClient.BASE_URL;
 
+import id.coba.kotlinpintar.Component.APIError;
+import id.coba.kotlinpintar.Component.LoadingDialog;
+import id.coba.kotlinpintar.Dto.BersihListResponse;
+import id.coba.kotlinpintar.Dto.DataBersih;
+import id.coba.kotlinpintar.Dto.DataKeluar;
+import id.coba.kotlinpintar.Dto.DataKotor;
+import id.coba.kotlinpintar.Dto.DataRequest;
+import id.coba.kotlinpintar.Dto.KeluarListResponse;
+import id.coba.kotlinpintar.Dto.KotorListResponse;
+import id.coba.kotlinpintar.Dto.LastHistory;
+import id.coba.kotlinpintar.Dto.LinenBersih;
+import id.coba.kotlinpintar.Dto.LinenBersihDetail;
+import id.coba.kotlinpintar.Dto.LinenKeluar;
+import id.coba.kotlinpintar.Dto.LinenKeluarDetail;
+import id.coba.kotlinpintar.Dto.LinenKeluarRequest;
+import id.coba.kotlinpintar.Dto.LinenKotor;
+import id.coba.kotlinpintar.Dto.LinenKotorDetail;
+import id.coba.kotlinpintar.Dto.RequestDetail;
+import id.coba.kotlinpintar.Dto.RequestListResponse;
+import id.coba.kotlinpintar.Dto.Serial;
+import id.coba.kotlinpintar.Helper.Helper;
+import id.coba.kotlinpintar.Rest.ApiClient;
+import id.coba.kotlinpintar.Rest.ApiInterface;
+import retrofit2.Call;
+import retrofit2.Callback;
+
 public class Fragment_Keluar extends Fragment implements OnCheckedChangeListener,OnClickListener{
     private View view;// this fragment UI
     private TextView tvTagSum ;
+    private TextView txtTambah ;
     private TextView tvTagSumBerat ;
     private ListView lvEpc;
     private ListView lvRequest;
     private Button btnStart ;//inventory button
-    private Button btnClear ;// clear button
+    private ImageView btnClear ;// clear button
     private Button btnSimpan ;
     private ImageButton btnReff ;
     private EditText edittext;
@@ -111,6 +145,7 @@ public class Fragment_Keluar extends Fragment implements OnCheckedChangeListener
     private ArrayList<HashMap> listEpc;
     private ArrayList<HashMap> listRequest;
     private LinearLayout lscan;
+    private LinearLayout empty_layout;
 
     private Set<String> epcSet = null ;
     //    private List<HashMap> listEpc = null;//EPC list
@@ -132,6 +167,7 @@ public class Fragment_Keluar extends Fragment implements OnCheckedChangeListener
     private SimpleCursorAdapter adapterPIC ;
     private SimpleCursorAdapter adapterRuangan ;
     private SharedPreferences prefMode;
+    ApiInterface apiInterface;
 
     //handler
     private Handler handler = new Handler(){
@@ -176,17 +212,21 @@ public class Fragment_Keluar extends Fragment implements OnCheckedChangeListener
 
                         for (HashMap num_req : listRequest) {
                             if (item.equals(num_req.get("jenis"))) {
-                                num_req.put("ready",1);
+                                num_req.put("ready",Integer.parseInt(num_req.get("ready").toString())+1);
                             }
                         }
 
                         adapter = new EPCKeluarAdapter(getActivity(), listEpc);
                         adapter_request = new KeluarRequestAdapter(getActivity(), listRequest, listEpc);
                         lvEpc.setAdapter(adapter);
+                        Helper.getListViewSize(lvEpc);
                         lvRequest.setAdapter(adapter_request);
+                        Helper.getListViewSize(lvRequest);
 
                         Util.play(1, 0);
                         KeluarActivity.mSetEpcs=epcSet;
+                        tvTagSum.setText("" + listEpc.size());
+
                     }else{
                         if (epcSet.contains(epc.replace("\n",""))) {//set already exit
 
@@ -224,7 +264,7 @@ public class Fragment_Keluar extends Fragment implements OnCheckedChangeListener
 
                         adapter.notifyDataSetChanged();
                         adapter_request.notifyDataSetChanged();
-                        txtScan.setText("");
+                        Helper.getListViewSize(lvEpc);
                     }
 
                     break ;
@@ -232,10 +272,10 @@ public class Fragment_Keluar extends Fragment implements OnCheckedChangeListener
         }
     } ;
     @Override
-    public View onCreateView(LayoutInflater inflater,
-                             @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        view= inflater.inflate(R.layout.fragment_keluar, null);
+    public View onCreateView(LayoutInflater inflater,@Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        view= inflater.inflate(R.layout.fragment_keluar_new, null);
         prefMode = getContext().getSharedPreferences("MODE", Context.MODE_PRIVATE);
+        apiInterface = ApiClient.getClient().create(ApiInterface.class);
         initView();
 
 
@@ -252,9 +292,9 @@ public class Fragment_Keluar extends Fragment implements OnCheckedChangeListener
             berat = "0";
         }
         double tb =Float.parseFloat(tvTagSumBerat.getText().toString());
-        Float litersOfPetrol=Float.parseFloat(berat);
+        Float litersOfPetrol = Float.parseFloat(berat);
         tb += litersOfPetrol;
-        tvTagSumBerat.setText( String.format("%.1f", tb) );
+        tvTagSumBerat.setText( new Formatter(Locale.ENGLISH).format("%.1f", tb).toString() );
     }
 
     private void initView() {
@@ -262,8 +302,9 @@ public class Fragment_Keluar extends Fragment implements OnCheckedChangeListener
         lvRequest = (ListView) view.findViewById(R.id.listView_request);
         btnStart = (Button) view.findViewById(R.id.button_start);
         tvTagSum = (TextView) view.findViewById(R.id.textView_tag) ;
+        txtTambah = (TextView) view.findViewById(R.id.txtTambah) ;
         tvTagSumBerat = (TextView) view.findViewById(R.id.textView_total_berat) ;
-        btnClear = (Button) view.findViewById(R.id.button_clear_epc) ;
+        btnClear = (ImageView) view.findViewById(R.id.btnUlangi) ;
         btnSimpan = (Button) view.findViewById(R.id.button_simpan) ;
         btnReff = (ImageButton) view.findViewById(R.id.btnReff) ;
         edittext= (EditText) view.findViewById(R.id.tanggal);
@@ -271,6 +312,8 @@ public class Fragment_Keluar extends Fragment implements OnCheckedChangeListener
         spinner_pic= view.findViewById(R.id.spinner_pic);
         spinner_ruangan= view.findViewById(R.id.spinner_ruangan);
         lscan = (LinearLayout) view.findViewById(R.id.lscan) ;
+        empty_layout= (LinearLayout)view.findViewById(R.id.layout_empty);
+        lvEpc.setEmptyView(empty_layout);
 
         noTransaksi= (EditText) view.findViewById(R.id.no_transaksi);
         setAutoNumber();
@@ -292,13 +335,107 @@ public class Fragment_Keluar extends Fragment implements OnCheckedChangeListener
             @Override
             public boolean onKey(View v, int keyCode, KeyEvent event) {
                 if ((keyCode == KeyEvent.KEYCODE_ENTER)) {
-                    String epc = txtScan.getText().toString().replace("\n","");
-                    Message msg = new Message();
-                    msg.what = 1;
-                    Bundle b = new Bundle();
-                    b.putString("epc", epc);
+                    manualscan();
+                }
+                return false;
+            }
+        });
 
-                    try {
+        txtTambah.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                manualscan();
+            }
+        });
+
+        if(prefMode.getBoolean("MODE", false) == true){
+            lscan.setVisibility(View.GONE);
+            btnStart.setEnabled(true);
+        }else{
+            btnStart.setEnabled(false);
+        }
+
+        mHelper = new InputDbHelper(getActivity());
+        tvTagSumBerat.setText("0");
+
+        updateLabel();
+        loadspinner();
+        String no = getArguments().getString("no_transaksi");
+
+        if (no != null){
+            updateUIBaru(no);
+        }
+        ((AppCompatActivity)getActivity()).getSupportActionBar().setCustomView(R.layout.abs_layout);
+        ((AppCompatActivity)getActivity()).getSupportActionBar().setDisplayOptions(androidx.appcompat.app.ActionBar.DISPLAY_SHOW_CUSTOM);
+        ((AppCompatActivity)getActivity()).getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        ((AppCompatActivity)getActivity()).getSupportActionBar().setDisplayShowHomeEnabled(true);
+        AppCompatTextView title = ((AppCompatActivity)getActivity()).getSupportActionBar().getCustomView().findViewById(R.id.tvTitle);
+        title.setText("Form Linen Keluar");
+    }
+    private void manualscan(){
+        String epc = txtScan.getText().toString().replace("\n","");
+        txtScan.setText("");
+        Message msg = new Message();
+        msg.what = 1;
+        Bundle b = new Bundle();
+        b.putString("epc", epc);
+
+        try {
+            Call<Serial> call2 = apiInterface.infoSerial(epc);
+            call2.enqueue(new Callback<Serial>() {
+                @Override
+                public void onResponse(Call<Serial> call, retrofit2.Response<Serial> response) {
+                    Serial userList = response.body();
+                    b.putString("exist", "0");
+                    if(userList != null) {
+                        List<Serial.Datum> datumList = userList.data;
+                        String message = userList.message;
+                        for (Serial.Datum datum : datumList) {
+                            b.putString("rssi", datum.ruangan);
+                            b.putString("item", datum.jenis);
+                            b.putString("berat", datum.berat);
+
+                            Call<LastHistory> callhistory = apiInterface.getLastHistory(epc);
+                            callhistory.enqueue(new Callback<LastHistory>() {
+                                @Override
+                                public void onResponse(Call<LastHistory> call, retrofit2.Response<LastHistory> response) {
+                                    LastHistory history = response.body();
+                                    if(history != null){
+                                        List<LastHistory.Datum> historyDatum = history.data;
+                                        for (LastHistory.Datum datum : historyDatum) {
+                                            if (datum.status.equals("keluar")) {
+                                                b.putString("exist", "1");
+                                            }
+                                        }
+                                    }
+                                }
+
+                                @Override
+                                public void onFailure(Call<LastHistory> call3, Throwable t) {
+                                    call3.cancel();
+                                }
+                            });
+                        }
+                    }else{
+                        b.putString("rssi", "-");
+                        b.putString("item", "Tidak Terdaftar!");
+                        b.putString("berat", "0");
+                    }
+
+                    msg.setData(b);
+                    handler.sendMessage(msg);
+                }
+                @Override
+                public void onFailure(Call<Serial> call, Throwable t) {
+                    call.cancel();
+                    txtScan.setText("");
+                    Toast.makeText(getContext(), t.getMessage(), Toast.LENGTH_SHORT).show();
+                }
+            });
+        }catch (Exception ex) {
+            Toast.makeText(getContext(), ex.getMessage(), Toast.LENGTH_SHORT).show();
+        }
+        /*try {
                         SQLiteDatabase db = mHelper.getReadableDatabase();
 
                         String selectQuery = "SELECT A.*,B.jenis,B.berat FROM " + TABLE_BARANG + " A JOIN " + TABLE_JENIS_BARANG + " B ON A.ID_JENIS=B.ID_JENIS WHERE serial='" + epc + "'";
@@ -320,14 +457,6 @@ public class Fragment_Keluar extends Fragment implements OnCheckedChangeListener
                                 b.putString("berat", berat);
 
                                 String exist = "";
-//                                selectQuery = "SELECT b.* FROM linen_keluar a " +
-//                                        "JOIN linen_keluar_detail b ON a.transaksi=b.transaksi " +
-//                                        "WHERE a.status=0 and epc='" + epc +"' AND a.transaksi<>'" + noTransaksi.getText().toString() + "'";
-//                                Cursor cursor_exist = db.rawQuery(selectQuery, null);
-//                                while (cursor_exist.moveToNext()) {
-//                                    exist = "1";
-//                                }
-
                                 InputDbHelper db_store = new InputDbHelper(getActivity());
                                 Cursor cursor_exist_bersih = db_store.getLastHistory(epc);
                                 while (cursor_exist_bersih.moveToNext()) {
@@ -348,56 +477,26 @@ public class Fragment_Keluar extends Fragment implements OnCheckedChangeListener
                         msg.setData(b);
                         handler.sendMessage(msg);
                     } catch (Exception ex) {
-                    }
-                }
-                return false;
-            }
-        });
-
-        if(prefMode.getBoolean("MODE", false) == true){
-            lscan.setVisibility(View.GONE);
-            btnStart.setEnabled(true);
-        }else{
-            btnStart.setEnabled(false);
-        }
-
-        mHelper = new InputDbHelper(getActivity());
-        tvTagSumBerat.setText("0");
-
-        updateLabel();
-        loadspinner();
-        String no = getArguments().getString("no_transaksi");
-
-        if (no != null){
-            updateUI(no);
-        }
-        ((AppCompatActivity)getActivity()).getSupportActionBar().setTitle("Form Linen Keluar");
-        ((AppCompatActivity)getActivity()).getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        ((AppCompatActivity)getActivity()).getSupportActionBar().setDisplayShowHomeEnabled(true);
-
+                    }*/
     }
-
     private void loadspinner() {
-
         InputDbHelper db = new InputDbHelper(getActivity());
         final Cursor serviceCursor = db.getPICCursor();
         String[] from = {"nama_user"};
         int[] to = {android.R.id.text1};
-        adapterPIC = new SimpleCursorAdapter(getActivity(), android.R.layout.simple_spinner_dropdown_item, serviceCursor, from, to, 0);
-        adapterPIC.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        adapterPIC = new SimpleCursorAdapter(getActivity(), R.layout.spinner_dropdown_item, serviceCursor, from, to, 0);
+        adapterPIC.setDropDownViewResource(R.layout.spinner_dropdown_item);
         spinner_pic.setAdapter(adapterPIC);
 
         final Cursor kategoriCursor = db.getServiceCursor();
         String[] from_ruangan = {"nama_ruangan"};
         int[] to_ruangan = {android.R.id.text1};
-        adapterRuangan = new SimpleCursorAdapter(getActivity(), android.R.layout.simple_spinner_dropdown_item, kategoriCursor, from_ruangan, to_ruangan, 0);
-        adapterRuangan.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        adapterRuangan = new SimpleCursorAdapter(getActivity(), R.layout.spinner_dropdown_item, kategoriCursor, from_ruangan, to_ruangan, 0);
+        adapterRuangan.setDropDownViewResource(R.layout.spinner_dropdown_item);
         spinner_ruangan.setAdapter(adapterRuangan);
-
     }
 
     DatePickerDialog.OnDateSetListener date = new DatePickerDialog.OnDateSetListener() {
-
         @Override
         public void onDateSet(DatePicker view, int year, int monthOfYear,
                               int dayOfMonth) {
@@ -406,7 +505,6 @@ public class Fragment_Keluar extends Fragment implements OnCheckedChangeListener
             myCalendar.set(Calendar.DAY_OF_MONTH, dayOfMonth);
             updateLabel();
         }
-
     };
 
     @Override
@@ -437,11 +535,9 @@ public class Fragment_Keluar extends Fragment implements OnCheckedChangeListener
         if (KeluarActivity.mUhfrManager!=null) KeluarActivity.mUhfrManager.setCancleInventoryFilter();
     }
 
-
     private boolean isRunning = false ;
     private boolean isStart = false ;
     String epc ;
-    //inventory epc
     private Runnable inventoryTask = new Runnable() {
         @Override
         public void run() {
@@ -451,15 +547,7 @@ public class Fragment_Keluar extends Fragment implements OnCheckedChangeListener
                     if (isMulti) { // multi mode
                         list1 = KeluarActivity.mUhfrManager.tagInventoryRealTime();
                     }else{
-                        //sleep can save electricity
-//						try {
-//							Thread.sleep(250);
-//						} catch (InterruptedException e) {
-//							e.printStackTrace();
-//						}
                         list1 = KeluarActivity.mUhfrManager.tagInventoryByTimer((short)50);
-                        //inventory epc + tid
-//                        list1 = KeluarActivity.mUhfrManager.tagEpcTidInventoryByTimer((short) 50);
                     }
                     if (list1 != null&&list1.size()>0) {//
                         for (TAGINFO tfs:list1) {
@@ -472,73 +560,61 @@ public class Fragment_Keluar extends Fragment implements OnCheckedChangeListener
                             Bundle b = new Bundle();
                             b.putString("epc", epc);
 
-                            SQLiteDatabase db = mHelper.getReadableDatabase();
+                            try {
+                                Call<Serial> call2 = apiInterface.infoSerial(epc);
+                                call2.enqueue(new Callback<Serial>() {
+                                    @Override
+                                    public void onResponse(Call<Serial> call, retrofit2.Response<Serial> response) {
+                                        Serial userList = response.body();
+                                        b.putString("exist", "0");
+                                        if(userList != null) {
+                                            List<Serial.Datum> datumList = userList.data;
+                                            String message = userList.message;
+                                            for (Serial.Datum datum : datumList) {
+                                                b.putString("rssi", datum.ruangan);
+                                                b.putString("item", datum.jenis);
+                                                b.putString("berat", datum.berat);
 
-                            String selectQuery = "SELECT A.*,B.jenis,B.berat FROM " + TABLE_BARANG + " A JOIN " + TABLE_JENIS_BARANG + " B ON A.ID_JENIS=B.ID_JENIS WHERE serial='" + epc + "'";
-                            Cursor cursor_header = db.rawQuery(selectQuery, null);
+                                                Call<LastHistory> callhistory = apiInterface.getLastHistory(epc);
+                                                callhistory.enqueue(new Callback<LastHistory>() {
+                                                    @Override
+                                                    public void onResponse(Call<LastHistory> call, retrofit2.Response<LastHistory> response) {
+                                                        LastHistory history = response.body();
+                                                        List<LastHistory.Datum> historyDatum = history.data;
+                                                        for (LastHistory.Datum datum : historyDatum) {
+                                                            if (datum.status.equals("keluar")) {
+                                                                b.putString("exist", "1");
+                                                            }
+                                                        }
+                                                    }
 
-                            String berat = "0";
-                            String jenis = "";
-                            b.putString("exist", "0");
-
-                            int count = cursor_header.getCount();
-                            if (count > 0) {
-                                while (cursor_header.moveToNext()) {
-                                    String ruangan = cursor_header.getString(cursor_header.getColumnIndex(InputDbHelper.NAMA_RUANGAN));
-                                    jenis = cursor_header.getString(cursor_header.getColumnIndex(InputDbHelper.JENIS));
-                                    berat = cursor_header.getString(cursor_header.getColumnIndex(InputDbHelper.BERAT));
-
-                                    b.putString("rssi", ruangan);
-                                    b.putString("item", jenis);
-                                    b.putString("berat", berat);
-
-                                    String exist = "";
-//                                selectQuery = "SELECT b.* FROM linen_keluar a " +
-//                                        "JOIN linen_keluar_detail b ON a.transaksi=b.transaksi " +
-//                                        "WHERE a.status=0 and epc='" + epc +"' AND a.transaksi<>'" + noTransaksi.getText().toString() + "'";
-//                                Cursor cursor_exist = db.rawQuery(selectQuery, null);
-//                                while (cursor_exist.moveToNext()) {
-//                                    exist = "1";
-//                                }
-
-                                    InputDbHelper db_store = new InputDbHelper(getActivity());
-                                    Cursor cursor_exist_bersih = db_store.getLastHistory(epc);
-                                    while (cursor_exist_bersih.moveToNext()) {
-                                        int i_status = cursor_exist_bersih.getColumnIndex("FLAG");
-
-                                        String status = cursor_exist_bersih.getString(i_status);
-                                        if (status.equals("keluar")) {
-                                            exist = "1";
+                                                    @Override
+                                                    public void onFailure(Call<LastHistory> call3, Throwable t) {
+                                                        call3.cancel();
+                                                    }
+                                                });
+                                            }
+                                        }else{
+                                            b.putString("rssi", "-");
+                                            b.putString("item", "Tidak Terdaftar!");
+                                            b.putString("berat", "0");
                                         }
+
+                                        msg.setData(b);
+                                        handler.sendMessage(msg);
                                     }
-                                    b.putString("exist", exist);
-                                }
-                            }else{
-                                b.putString("rssi", "-");
-                                b.putString("item", "Tidak Terdaftar!");
-                                b.putString("berat", "0");
+                                    @Override
+                                    public void onFailure(Call<Serial> call, Throwable t) {
+                                        call.cancel();
+                                        txtScan.setText("");
+                                        Toast.makeText(getContext(), t.getMessage(), Toast.LENGTH_SHORT).show();
+                                    }
+                                });
+                            }catch (Exception ex) {
+                                Toast.makeText(getContext(), ex.getMessage(), Toast.LENGTH_SHORT).show();
                             }
-                            msg.setData(b);
-                            handler.sendMessage(msg);
                         }
                     }
-                    //inventory epc + tid
-//                    if (list1 != null && list1.size() > 0) {
-//                        for (TAGINFO tfs : list1) {
-//                            byte[] epcdata = tfs.EpcId;
-//                            epc = Tools.Bytes2HexString(epcdata, epcdata.length);
-//                            int rssi = tfs.RSSI;
-//                            String tid = Tools.Bytes2HexString(tfs.EmbededData, tfs.EmbededDatalen);
-//                            Log.e("Huang, Fragment1", "tid = " + tid);
-//                            Message msg = new Message();
-//                            msg.what = 1;
-//                            Bundle b = new Bundle();
-//                            b.putString("epc", epc);
-////                            b.putString("rssi", rssi + "");
-//                            msg.setData(b);
-//                            handler.sendMessage(msg);
-//                        }
-//                    }
                 }
             }
         }
@@ -565,8 +641,6 @@ public class Fragment_Keluar extends Fragment implements OnCheckedChangeListener
                 }
 
             } else {
-//                checkMulti.setClickable(true);
-//                checkMulti.setTextColor(Color.BLACK);
                 if (isMulti)
                     KeluarActivity.mUhfrManager.asyncStopReading();
                 else
@@ -596,7 +670,7 @@ public class Fragment_Keluar extends Fragment implements OnCheckedChangeListener
             case R.id.button_start:
                 runInventory() ;
                 break ;
-            case R.id.button_clear_epc:
+            case R.id.btnUlangi:
                 clearEpc();
                 break ;
             case R.id.btnReff:
@@ -634,7 +708,7 @@ public class Fragment_Keluar extends Fragment implements OnCheckedChangeListener
                                 limit_req = true;
                             }
                         }
-                        if (exist_req) {
+                        if (exist_req && lvEpc.getCount() <= 0) {
                             Toast.makeText(getActivity(), "List Request min ready > 0 .!", Toast.LENGTH_SHORT).show();
                             break;
                         }
@@ -650,13 +724,19 @@ public class Fragment_Keluar extends Fragment implements OnCheckedChangeListener
                 }
 
                 Boolean exist = false;
-                SQLiteDatabase db = mHelper.getReadableDatabase();
+                //SQLiteDatabase db = mHelper.getReadableDatabase();
+                ArrayList<String> listReq = new ArrayList<String>();
+                if(listRequest != null) {
+                    for (HashMap num_req : listRequest) {
+                        listReq.add(num_req.get("jenis").toString());
+                    }
+                }
                 for (HashMap num : listEpc) {
                     if (num.get("item").equals("Tidak Terdaftar!")){
                         exist = true;
                         Toast.makeText(getActivity(),"Serial " + num.get("epc") + " belum terdaftar..!",Toast.LENGTH_SHORT).show();
                     }
-                    InputDbHelper db_store = new InputDbHelper(getActivity());
+                    /*InputDbHelper db_store = new InputDbHelper(getActivity());
                     Cursor cursor_exist_bersih = db_store.getLastHistory( num.get("epc").toString());
                     while (cursor_exist_bersih.moveToNext()) {
 
@@ -682,24 +762,90 @@ public class Fragment_Keluar extends Fragment implements OnCheckedChangeListener
                         String noTransaksi = cursor_exist_rusak.getString(no);
                         Toast.makeText(getActivity(),"Serial " + num.get("epc") + " telah berstatus rusak..!",Toast.LENGTH_SHORT).show();
                         break;
-                    }
+                    }*/
 
-                    if(listRequest != null) {
-                        for (HashMap num_req : listRequest) {
-                            if (!num.get("item").equals(num_req.get("jenis"))) {
-                                exist = true;
-                                Toast.makeText(getActivity(), "Item " + num.get("item") + " tidak ada di list request..!", Toast.LENGTH_SHORT).show();
-                                break;
-                            }
+                    if(listReq.size() >0 ){
+                        if (!listReq.contains(num.get("item"))) {
+                            exist = true;
+                            Toast.makeText(getActivity(), "Item " + num.get("item") + " tidak ada di list request..!", Toast.LENGTH_SHORT).show();
+                            break;
                         }
                     }
-
                 }
+
+
                 if(exist) {
                     break;
                 }
 
+                LinenKeluar keluar = new LinenKeluar();
+                keluar.NO_TRANSAKSI = no_transaksi;
+                keluar.TANGGAL = tanggal;
+                keluar.PIC = pic;
+                keluar.STATUS = "KIRIM";
+                keluar.RUANGAN = ruangan;
+                keluar.NO_REFERENSI = no_referensi;
+
                 View parentView = null;
+                for (int i = 0; i < lvEpc.getCount(); i++) {
+
+                    parentView = getViewByPosition(i, lvEpc);
+
+                    String epcName = ((TextView) parentView.findViewById(R.id.textView_epc)).getText().toString();
+                    String barang = ((TextView) parentView.findViewById(R.id.textView_barang)).getText().toString();
+                    LinenKeluarDetail dtm = new LinenKeluarDetail();
+                    dtm.epc = epcName;
+                    dtm.no_transaksi =  no_transaksi;
+                    dtm.jenis = barang;
+                    keluar.detail.add(i,dtm);
+                }
+
+                for (HashMap num_req : listRequest) {
+                    LinenKeluarRequest dtr = new LinenKeluarRequest();
+                    dtr.jenis = num_req.get("jenis").toString();
+                    dtr.qty = Integer.parseInt(num_req.get("qty").toString());
+                    dtr.ready =  Integer.parseInt(num_req.get("ready").toString());
+
+                    keluar.request.add(dtr);
+                }
+
+                AlertDialog alertDialog = new AlertDialog.Builder(getActivity()).create();
+                alertDialog.setTitle("Yakin akan di simpan?");
+                //alertDialog.setMessage("Pastikan linen sudah di cek ulang.");
+
+                alertDialog.setButton(AlertDialog.BUTTON_POSITIVE, "OK", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        final LoadingDialog loadingDialog = new LoadingDialog(getActivity());
+                        loadingDialog.startLoadingDialog();
+                        Call<LinenKeluar> call2 = apiInterface.saveLinenKeluar(keluar);
+                        call2.enqueue(new Callback<LinenKeluar>() {
+                            @Override
+                            public void onResponse(Call<LinenKeluar> call, retrofit2.Response<LinenKeluar> response) {
+                                System.out.println(response);
+                                LinenKeluar defaultResponse = response.body();
+                                if(defaultResponse == null && response.errorBody() != null){
+                                    APIError message = new Gson().fromJson(response.errorBody().charStream(), APIError.class);
+                                    Toast.makeText(getContext(), message.getMessage(), Toast.LENGTH_LONG).show();
+                                }else{
+                                    if(defaultResponse.Error == false){
+                                        showToast("Sukses Menyimpan !!");
+                                        Intent intent = new Intent(getActivity(), ListKeluarActivityRecycle.class);
+                                        startActivity(intent);
+                                    }
+                                }
+                                loadingDialog.dismissDialog();
+                            }
+                            @Override
+                            public void onFailure(Call<LinenKeluar> call, Throwable t) {
+                                call.cancel();
+                                loadingDialog.dismissDialog();
+                                Toast.makeText(getContext(), t.getMessage(), Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                    }
+                });
+                alertDialog.show();
+                /*
 
                 ContentValues values_header = new ContentValues();
 
@@ -749,8 +895,9 @@ public class Fragment_Keluar extends Fragment implements OnCheckedChangeListener
                 db.close();
                 showToast("Sukses menyimpan..");
                 syncOnlineDB();
-                intent = new Intent(getActivity(), ListKeluarActivity.class);
+                intent = new Intent(getActivity(), ListKeluarActivityRecycle.class);
                 startActivity(intent);
+                 */
                 break ;
         }
     }
@@ -914,42 +1061,122 @@ public class Fragment_Keluar extends Fragment implements OnCheckedChangeListener
 
     private void loadDataRequest(String no ) {
         listRequest = new ArrayList<HashMap>();
-//        if(listEpc != null){
-//
-//        }
-//        ArrayList<HashMap> listdummy = new ArrayList<HashMap>();
+        List<String> myList = new ArrayList<String>();
+
+        listRequest.clear();
+        Call<RequestListResponse> call2 = apiInterface.getRequest(no);
+        call2.enqueue(new Callback<RequestListResponse>() {
+            @Override
+            public void onResponse(Call<RequestListResponse> call, retrofit2.Response<RequestListResponse> response) {
+                if(response.body() != null){
+
+                    ArrayList<DataRequest> dataRequest = response.body().getData();
+
+                    for (DataRequest data : dataRequest){
+                        getIndexRuangan(spinner_ruangan, data.getRuangan());
+                        List<RequestDetail> datumList = data.getDetail();
+                        for (RequestDetail datum : datumList) {
+                            mapEpc = new HashMap();
+                            mapEpc.put(JENIS, datum.jenis);
+                            mapEpc.put(QTY, datum.qty);
+                            mapEpc.put("ready", datum.qty_keluar);
+                            listRequest.add(mapEpc);
+                        }
+                        adapter_request = new KeluarRequestAdapter(getActivity(), listRequest,listEpc);
+                        lvRequest.setAdapter(adapter_request);
+                        Helper.getListViewSize(lvEpc);
+                        Helper.getListViewSize(lvRequest);
+                    }
+                }
+
+            }
+            @Override
+            public void onFailure(Call<RequestListResponse> call, Throwable t) {
+                call.cancel();
+                Toast.makeText(getContext(), t.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void updateUIBaru(String no ) {
+        epcSet = new HashSet<String>();
+        listEpc = new ArrayList<HashMap>();
+        listRequest = new ArrayList<HashMap>();
+
         List<String> myList = new ArrayList<String>();
         SQLiteDatabase db = mHelper.getReadableDatabase();
 
-        Cursor cursor_header = db.rawQuery(
-                "SELECT * " +
-                        "FROM request_linen_detail " +
-                        "WHERE no_request = '" + no + "' ",
-                null);
-        listRequest.clear();
-        while (cursor_header.moveToNext()) {
-            int id_jenis = cursor_header.getColumnIndex(JENIS);
-            int id_qty = cursor_header.getColumnIndex(QTY);
-            int id_ready = cursor_header.getColumnIndex(READY);
+        String noTrans = noTransaksi.getText().toString();
+        btnSimpan.setVisibility(View.VISIBLE);
+        btnStart.setVisibility(View.VISIBLE);
+        btnClear.setVisibility(View.VISIBLE);
 
-            String jenis = cursor_header.getString(id_jenis);
-            String qty = cursor_header.getString(id_qty);
-            String ready = cursor_header.getString(id_ready);
-
-            mapEpc = new HashMap();
-            mapEpc.put(JENIS, jenis);
-            mapEpc.put(QTY, qty);
-            mapEpc.put("ready", ready);
-            listRequest.add(mapEpc);
+        if(no != ""){
+            noTrans = no;
+            btnSimpan.setVisibility(View.GONE);
+            btnStart.setVisibility(View.GONE);
+            btnClear.setVisibility(View.GONE);
         }
 
-        adapter_request = new KeluarRequestAdapter(getActivity(), listRequest,listEpc);
-        lvRequest.setAdapter(adapter_request);
+        Call<KeluarListResponse> call2 = apiInterface.getKeluar(no);
+        call2.enqueue(new Callback<KeluarListResponse>() {
+            @Override
+            public void onResponse(Call<KeluarListResponse> call, retrofit2.Response<KeluarListResponse> response) {
+                ArrayList<DataKeluar> dataKeluar = response.body().getData();
+                for (DataKeluar data : dataKeluar){
+                    noTransaksi.setText(data.getNO_TRANSAKSI());
+                    tgl.setText(data.getTANGGAL());
+                    txtReferensi.setText(data.getNO_REFERENSI());
 
-        cursor_header.close();
-        db.close();
+                    getIndexByString(spinner_pic,data.getPIC());
+                    getIndexRuangan(spinner_ruangan, data.getRUANGAN());
+
+                    int i = 0;
+                    double tb = 0;
+
+                    List<LinenKeluarDetail> datumList = data.getDetail();
+                    for (LinenKeluarDetail datum : datumList) {
+                        mapEpc = new HashMap();
+                        epcSet.add(datum.epc);
+                        mapEpc.put(datum.epc, i);
+                        mapEpc.put("epc", datum.epc);
+                        mapEpc.put("item", datum.item);
+                        mapEpc.put("berat", datum.berat);
+                        listEpc.add(mapEpc);
+                        i++;
+
+                        Float litersOfPetrol=Float.parseFloat(datum.berat);
+                        tb += litersOfPetrol;
+                        tvTagSum.setText( String.valueOf(i) );
+                    }
+
+                    List<LinenKeluarRequest> datumRequest = data.getRequest();
+                    for (LinenKeluarRequest datum : datumRequest) {
+                        mapEpc = new HashMap();
+                        mapEpc.put(JENIS, datum.jenis);
+                        mapEpc.put(QTY, datum.qty);
+                        mapEpc.put("ready", datum.qty_keluar);
+                        listRequest.add(mapEpc);
+                    }
+
+                    tvTagSumBerat.setText( new Formatter(Locale.ENGLISH).format("%.1f", tb).toString() );
+
+                    adapter = new EPCKeluarAdapter(getActivity(), listEpc);
+                    lvEpc.setAdapter(adapter);
+                    Helper.getListViewSize(lvEpc);
+
+                    adapter_request = new KeluarRequestAdapter(getActivity(), listRequest,listEpc);
+                    lvRequest.setAdapter(adapter_request);
+                    Helper.getListViewSize(lvRequest);
+                }
+            }
+            @Override
+            public void onFailure(Call<KeluarListResponse> call, Throwable t) {
+                call.cancel();
+                Toast.makeText(getContext(), t.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
     }
-
     private void updateUI(String no ) {
         epcSet = new HashSet<String>();
         listEpc = new ArrayList<HashMap>();
@@ -1037,7 +1264,6 @@ public class Fragment_Keluar extends Fragment implements OnCheckedChangeListener
             tb += litersOfPetrol;
             tvTagSum.setText( String.valueOf(i) );
 
-
         }
 
         selectQuery = "SELECT * " +
@@ -1059,7 +1285,7 @@ public class Fragment_Keluar extends Fragment implements OnCheckedChangeListener
             listRequest.add(mapEpc);
         }
 
-        tvTagSumBerat.setText( String.format("%.1f", tb) );
+        tvTagSumBerat.setText( new Formatter(Locale.ENGLISH).format("%.1f", tb).toString() );
 
         adapter = new EPCKeluarAdapter(getActivity(), listEpc);
         lvEpc.setAdapter(adapter);
@@ -1105,14 +1331,15 @@ public class Fragment_Keluar extends Fragment implements OnCheckedChangeListener
             adapter.notifyDataSetChanged();
             adapter_request.notifyDataSetChanged();
         }
+        listRequest.clear();
+
+        loadDataRequest(txtReferensi.getText().toString());
         allCount = 0 ;
         tvTagSum.setText("0");
         tvTagSumBerat.setText("0");
         if(KeluarActivity.mSetEpcs != null){
             KeluarActivity.mSetEpcs.clear();
         }
-
-//        lvEpc.removeAllViews();
     }
 
     private Toast toast;
@@ -1121,7 +1348,6 @@ public class Fragment_Keluar extends Fragment implements OnCheckedChangeListener
         else toast.setText(info);
         toast.show();
     }
-    //key receiver
     private  long startTime = 0 ;
     private boolean keyUpFalg= true;
     private BroadcastReceiver keyReceiver = new BroadcastReceiver() {
@@ -1132,16 +1358,14 @@ public class Fragment_Keluar extends Fragment implements OnCheckedChangeListener
             if(keyCode == 0){//H941
                 keyCode = intent.getIntExtra("keycode", 0) ;
             }
-//            Log.e("key ","keyCode = " + keyCode) ;
             boolean keyDown = intent.getBooleanExtra("keydown", false) ;
-//			Log.e("key ", "down = " + keyDown);
+
             if(keyUpFalg&&keyDown && System.currentTimeMillis() - startTime > 500){
                 keyUpFalg = false;
                 startTime = System.currentTimeMillis() ;
                 if ( (keyCode == KeyEvent.KEYCODE_F1 || keyCode == KeyEvent.KEYCODE_F2
                         || keyCode == KeyEvent.KEYCODE_F3 || keyCode == KeyEvent.KEYCODE_F4 ||
                         keyCode == KeyEvent.KEYCODE_F5)) {
-//                Log.e("key ","inventory.... " ) ;
                     runInventory();
                 }
                 return ;

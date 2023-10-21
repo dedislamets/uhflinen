@@ -13,6 +13,6 @@ import retrofit2.http.PUT;
 public interface LoginInterface {
     @FormUrlEncoded
     @POST("login")
-    Call<LoginModel> getLogin(@Field("email") String email, @Field("password") String password);
+    Call<LoginModel> getLogin(@Field("email") String email, @Field("password") String password, @Field("company") String company);
 
 }

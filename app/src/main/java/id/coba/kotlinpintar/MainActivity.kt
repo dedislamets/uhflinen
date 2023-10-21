@@ -3,43 +3,35 @@ package id.coba.kotlinpintar
 import android.content.*
 import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
-import android.graphics.Color
-import androidx.appcompat.app.AppCompatActivity
+import android.net.Uri
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.view.Menu
-import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
-import androidx.appcompat.widget.Toolbar
-import androidx.lifecycle.Observer
-import kotlinx.android.synthetic.main.activity_main.*
-import androidx.core.app.ComponentActivity.ExtraData
-import androidx.core.content.ContextCompat.getSystemService
-import android.icu.lang.UCharacter.GraphemeClusterBreak.T
-import android.net.ConnectivityManager
-import androidx.fragment.app.Fragment
-import com.google.android.material.bottomnavigation.BottomNavigationView
-import id.coba.kotlinpintar.Rest.ApiClient
-import java.util.*
-import kotlin.concurrent.schedule
-import kotlin.concurrent.timerTask
-import android.os.Looper
-import androidx.core.content.ContextCompat.getSystemService
-import android.icu.lang.UCharacter.GraphemeClusterBreak.T
-import android.net.Uri
-import android.os.Handler
 import android.widget.*
+import androidx.appcompat.app.ActionBar
 import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.AppCompatTextView
+import androidx.appcompat.widget.Toolbar
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.Observer
 import com.android.volley.Request
 import com.android.volley.Response
 import com.android.volley.toolbox.StringRequest
 import com.android.volley.toolbox.Volley
+import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import id.coba.kotlinpintar.InputDbHelper.*
+import id.coba.kotlinpintar.Rest.ApiClient
 import id.coba.kotlinpintar.Rest.ApiClient.BASE_WEB
-import id.coba.kotlinpintar.Util.context
+import kotlinx.android.synthetic.main.activity_main.*
 import org.json.JSONArray
 import org.json.JSONObject
+import java.util.*
+import kotlin.system.exitProcess
 
 
 class MainActivity : AppCompatActivity(), View.OnClickListener {
@@ -78,7 +70,10 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             startActivity(intentBiasa1)
         }
 
-        getSupportActionBar()?.setTitle("UHF Reader V1.2")
+        //supportActionBar?.title = "UHF Reader V1.2"
+        supportActionBar?.setCustomView(R.layout.abs_layout_home)
+        supportActionBar?.setDisplayOptions(ActionBar.DISPLAY_SHOW_CUSTOM)
+
         btnGoal = findViewById(R.id.LayoutGoal)
         btnFinance = findViewById(R.id.LayoutFinance)
         btnPromise = findViewById(R.id.LayoutPromise)
@@ -99,6 +94,12 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
         nama_user.setText(pref.getString(NAMA_USER, "Nama User") )
         department.setText(pref.getString(DEPARTMENT, "Bagian"))
+
+        val title = supportActionBar?.customView?.findViewById<AppCompatTextView>(R.id.tvTitle)
+        title?.text = nama_user.text
+
+        val role = supportActionBar?.customView?.findViewById<AppCompatTextView>(R.id.tvRole)
+        role?.text = department.text
 
         btnNavigation = findViewById(R.id.bottomNavigationView)
         var menu : Menu = btnNavigation.menu
@@ -227,7 +228,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                     .show()
             }
             R.id.menuRequest -> {
-                val intentBiasa = Intent(this, ListRequestActivity::class.java)
+                val intentBiasa = Intent(this, ListRequestActivityRecycle::class.java)
                 startActivity(intentBiasa)
             }
             R.id.menuSettings -> {
@@ -275,7 +276,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                 return true
             }
             R.id.menuRequest -> {
-                val intentBiasa = Intent(this, ListRequestActivity::class.java)
+                val intentBiasa = Intent(this, ListRequestActivityRecycle::class.java)
                 startActivity(intentBiasa)
                 return true
             }
@@ -290,21 +291,20 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     override fun onClick(v: View) {
         when (v.id){
             R.id.LayoutGoal -> {
-                    val intentBiasa = Intent(this, ListKotorActivity::class.java)
+                    val intentBiasa = Intent(this, ListKotorActivityRecyle::class.java)
                     startActivity(intentBiasa)
                     finish()
             }
             R.id.LayoutFinance -> {
-                val intentFinance = Intent(this, ListBersihActivity::class.java)
+                val intentFinance = Intent(this, ListBersihActivityRecycle::class.java)
                 startActivity(intentFinance)
             }
             R.id.LayoutPromise -> {
-                val intentSearch = Intent(this, ListKeluarActivity::class.java)
+                val intentSearch = Intent(this, ListKeluarActivityRecycle::class.java)
                 startActivity(intentSearch)
             }
             R.id.LayoutSetting -> {
-//                val intentSetting = Intent(this, MultiColumnActivity::class.java)
-                val intentSetting = Intent(this, ListRusakActivity::class.java)
+                val intentSetting = Intent(this, ListRusakActivityRecycle::class.java)
                 startActivity(intentSetting)
             }
             R.id.LayoutPenilaian -> {
@@ -330,6 +330,20 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     override fun onDestroy() {
         super.onDestroy()
         unregisterReceiver(broadCastReceiver)
+    }
+
+    override fun onBackPressed() {
+        val builder = AlertDialog.Builder(this)
+
+        builder.setTitle("Confirm")
+        builder.setMessage("Are you sure you want to exit? ")
+        builder.setPositiveButton("Yes") { dialog, id ->
+            finishAffinity()
+        }
+        builder.setNegativeButton(
+            "No"
+        ) { dialog, id -> super.onBackPressed() }
+        builder.show()
     }
 
     override fun onResume() {

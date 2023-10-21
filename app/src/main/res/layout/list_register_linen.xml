@@ -1,77 +1,199 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
+<androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:orientation="vertical">
-<!--    <include-->
-<!--        android:id="@+id/header"-->
-<!--        layout="@layout/header_main"-->
-<!--        />-->
-<!--    >-->
-    <Button
-        android:id="@+id/btnCari"
-        android:drawableLeft="@drawable/ic_search_black_24dp"
-        android:padding="20dp"
-        android:layout_marginLeft="15dp"
-        android:layout_marginRight="15dp"
+    android:id="@+id/swipeRefresh"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".ListRegisterLinen"
+    android:background="@color/colorWhite">
+    <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
-        android:background="@drawable/search_icon_background"
-        android:text="Cari"
-        android:textColor="@color/colorTrendingStop"
-        android:gravity="center_horizontal"
-        android:layout_marginTop="10dp"
-        android:layout_height="45dp" />
-    <androidx.recyclerview.widget.RecyclerView
-
-        android:id="@+id/list_note"
-        android:layout_width="match_parent"
-        tools:listitem="@layout/adapter_reg_linen"
-        tools:itemCount="5"
-        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-        android:layout_marginTop="10dp"
-        android:padding="10dp"
-        android:layout_below="@id/btnCari"
-        android:layout_above="@id/btnBar"
-        android:layout_height="wrap_content"/>
-
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_centerVertical="true"
-        android:layout_centerHorizontal="true"
-        android:background="@drawable/white_rectangle_background"
-        app:backgroundTint="@color/colorWhite"
-        android:tint="@color/colorDivider"
-        android:layout_gravity="center"
-        android:layout_marginStart="10dp"
-        android:id="@+id/fab_create"
-        android:layout_marginLeft="10dp"
-        android:layout_marginTop="-65dp"
-        android:layout_marginBottom="65dp"
-        android:backgroundTint="@color/colorTrendingStop"
-        android:src="@drawable/ic_edit_black_24dp" />
-
-    <RelativeLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:id="@+id/btnBar"
-        android:layout_alignParentBottom="true"
-        >
-        <com.google.android.material.bottomnavigation.BottomNavigationView
-            android:id="@+id/bottomNavigationView"
+        android:layout_height="match_parent"
+        android:fillViewport="true"
+        android:background="@color/backgroundDefault"
+        android:padding="10dp">
+        <RelativeLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:backgroundTint="@color/colorWhite"
-            android:foregroundTint="#009C4747"
-            app:backgroundTint="#00292323"
-            app:itemBackground="@color/colorBackground"
-            app:itemIconSize="30dp"
-            app:labelVisibilityMode="labeled"
-            app:menu="@menu/navigation_menu" />
-    </RelativeLayout>
+            android:layout_height="match_parent"
+            android:orientation="vertical">
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:id="@+id/filter"
+                android:padding="5dp"
+                android:visibility="gone"
+                app:layout_constraintTop_toTopOf="parent">
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingBottom="5dp"
+                    android:textColor="@color/textList"
+                    android:textStyle="bold"
+                    android:text="Linen List"
+                    android:textSize="18dp"
+                    android:id="@+id/h1"/>
+                <androidx.appcompat.widget.SearchView
+                    android:id="@+id/country_search"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/search_icon_background"
+                    android:textCursorDrawable="@null"
+                    app:iconifiedByDefault="false"
+                    android:focusable="false"
+                    android:focusableInTouchMode="true"
+                    app:showAsAction="collapseActionView|always"
+                    android:tooltipText="Search"
+                    app:queryHint="Search"
+                    app:queryBackground="@null" />
+            </LinearLayout>
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:layout_below="@id/filter"
+                android:layout_above="@id/btnBar"
+                app:cardCornerRadius="8dp">
+                <LinearLayout
+                    android:id="@+id/linearLayout2"
+                    android:orientation="vertical"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+                    <LinearLayout
+                        android:orientation="horizontal"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:padding="5dp"
+                        android:id="@+id/linear_sum"
+                        android:background="@color/hijau">
+                        <TextView
+                            android:layout_width="40dp"
+                            android:textColor="@color/colorWhite"
+                            android:layout_height="wrap_content"
+                            android:text="No"
+                            />
+                        <TextView
+                            android:layout_width="120dp"
+                            android:layout_height="wrap_content"
+                            android:text="Serial"
+                            android:textColor="@color/colorWhite" />
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_weight="1"
+                            android:layout_height="wrap_content"
+                            android:text="Jenis "
+                            android:textColor="@color/colorWhite"
+                            />
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_weight="1"
+                            android:textColor="@color/colorWhite"
+                            android:layout_height="wrap_content"
+                            android:text="Ruangan" />
+                        <TextView
+                            android:layout_width="40dp"
+                            android:textColor="@color/colorWhite"
+                            android:layout_height="wrap_content"
+                            android:textAlignment="textEnd"
+                            android:text="Jml Cuci" />
+                    </LinearLayout>
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/list_note"
+                        android:layout_width="match_parent"
+                        tools:listitem="@layout/adapter_reg_linen"
+                        tools:itemCount="10"
+                        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+                        android:layout_marginTop="0dp"
+                        android:padding="0dp"
 
+                        android:layout_height="wrap_content"/>
+                    <LinearLayout
+                        android:id="@+id/layout_empty"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:layout_below="@id/list_note"
+                        android:visibility="gone">
+                        <ImageView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:src="@drawable/svg_kotor_empty"
+                            android:padding="10dp"
+                            android:layout_gravity="center"
+                            />
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:lineSpacingExtra="1sp"
+                            android:textStyle="bold"
+                            android:layout_gravity="center"
+                            android:textSize="18sp"
+                            android:layout_marginBottom="7dp"
+                            android:text="Belum ada list linen" />
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center"
+                            android:lineSpacingExtra="5sp"
+                            android:textAlignment="center"
+                            android:textSize="18sp"
+                            android:text="kamu belum memiliki linen." />
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center"
+                            android:lineSpacingExtra="5sp"
+                            android:textAlignment="center"
+                            android:textSize="18sp"
+                            android:text="Tambahkan sekarang jika ada " />
 
-</RelativeLayout>
+                    </LinearLayout>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <ProgressBar
+                android:id="@+id/progressBar"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerInParent="true"
+                android:layout_gravity="center"/>
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentBottom="true"
+                android:layout_centerVertical="true"
+                android:layout_centerHorizontal="true"
+                android:background="@drawable/white_rectangle_background"
+                app:backgroundTint="@color/colorWhite"
+                android:tint="@color/colorDivider"
+                android:layout_gravity="center"
+                android:layout_marginStart="10dp"
+                android:id="@+id/fab_create"
+                android:layout_marginLeft="10dp"
+                android:layout_marginTop="-65dp"
+                android:layout_marginBottom="65dp"
+                android:backgroundTint="@color/colorTrendingStop"
+                android:src="@drawable/ic_edit_black_24dp" />
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/btnBar"
+                android:layout_alignParentBottom="true"
+                >
+                <com.google.android.material.bottomnavigation.BottomNavigationView
+                    android:id="@+id/bottomNavigationView"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:backgroundTint="@color/colorWhite"
+                    android:foregroundTint="#009C4747"
+                    app:backgroundTint="#00292323"
+                    app:itemBackground="@color/colorBackground"
+                    app:itemIconSize="30dp"
+                    app:labelVisibilityMode="labeled"
+                    app:menu="@menu/navigation_menu" />
+            </RelativeLayout>
+        </RelativeLayout>
+    </androidx.core.widget.NestedScrollView>
+</androidx.swiperefreshlayout.widget.SwipeRefreshLayout>

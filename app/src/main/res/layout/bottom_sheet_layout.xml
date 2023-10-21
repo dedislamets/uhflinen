@@ -1,0 +1,282 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:descendantFocusability="beforeDescendants"
+    android:focusableInTouchMode="true"
+    android:background="@color/backgroundModal">
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:background="@color/colorWhite"
+        android:layout_width="match_parent"
+        android:padding="10dp"
+        android:layout_height="wrap_content">
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingTop="20dp"
+            android:orientation="horizontal">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Tambahkan Item"
+                android:textColor="@color/blue_dark_primary"
+                android:layout_weight="1"
+                android:textSize="20sp" />
+            <ImageView
+                android:id="@+id/btnClose"
+                android:layout_width="wrap_content"
+                android:layout_gravity="right"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="5dp"
+                app:srcCompat="@drawable/ic_close_black_24dp"></ImageView>
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <com.google.android.material.imageview.ShapeableImageView
+                android:id="@+id/neraca"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_marginTop="5dp"
+                android:src="@drawable/neraca"
+                app:shapeAppearanceOverlay="@style/Circular"
+                app:strokeColor="#FFFFFF"
+                app:strokeWidth="2dp"/>
+            <EditText
+                android:id="@+id/textView_total_berat_real"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginLeft="5dp"
+                android:layout_marginRight="5dp"
+                android:text=""
+                android:inputType="numberDecimal"
+                android:textColorHint="@color/placeholder"
+                android:hint="Masukkan berat timbang disini..."></EditText>
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/lscan"
+            android:orientation="horizontal">
+            <com.google.android.material.imageview.ShapeableImageView
+                android:id="@+id/barcode"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_marginTop="5dp"
+                android:src="@drawable/barcode"
+                app:shapeAppearanceOverlay="@style/Circular"
+                app:strokeColor="#FFFFFF"
+                app:strokeWidth="2dp"/>
+
+            <EditText
+                android:id="@+id/textView_scan"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginLeft="5dp"
+                android:enabled="true"
+                android:layout_marginRight="5dp"
+                android:textColorHint="@color/placeholder"
+                android:hint="Masukkan kode serial disini..."></EditText>
+            <TextView
+                android:id="@+id/txtTambah"
+                android:layout_width="wrap_content"
+                android:textSize="16dp"
+                android:textStyle="bold"
+                android:paddingRight="15dp"
+                android:textColor="#101828"
+                android:layout_height="wrap_content"
+                android:text="@string/tambah" />
+        </LinearLayout>
+
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_marginBottom="10dp"
+            android:layout_marginTop="10dp"
+            android:layout_height="wrap_content">
+            <Button
+                android:id="@+id/btnCekData"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/btn_ijo"
+                android:layout_weight="1"
+                android:textAllCaps="false"
+                android:textColor="@color/colorWhite"
+                android:layout_marginRight="10dp"
+                android:text="Cek Data"/>
+            <Button
+                android:id="@+id/button_clear_epc"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAllCaps="false"
+                android:textColor="@color/textList"
+                android:background="@drawable/btn_abu"
+                android:text="Ulangi"/>
+        </LinearLayout>
+        <ProgressBar
+            android:id="@+id/progress_bar"
+            style="@style/Base.Widget.AppCompat.ProgressBar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:indeterminate="true"
+            android:visibility="gone" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:background="@color/colorWhite"
+        android:layout_width="match_parent"
+        android:layout_marginTop="10dp"
+        android:padding="10dp"
+        android:layout_height="wrap_content">
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="5dp"
+            android:id="@+id/linear_sum">
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:textColor="@color/colorAccent"
+                android:textStyle="bold"
+                android:layout_weight="0.5"
+                android:textSize="20sp"
+                android:text="List Item"
+                />
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="0.5"
+                android:layout_gravity="right"
+                android:gravity="right"
+                android:orientation="horizontal">
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:paddingRight="10dp"
+                    app:srcCompat="@drawable/camera"></ImageView>
+                <TextView
+                    android:layout_width="40dp"
+                    android:layout_height="wrap_content"
+                    android:paddingTop="5dp"
+                    android:text="0"
+                    android:textAlignment="center"
+                    android:id="@+id/textView_tag"
+                    android:textColor="@color/colorAccent" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:paddingTop="5dp"
+                    android:text="Linen"
+                    android:textAlignment="center"
+                    android:paddingRight="10dp"
+                    android:textColor="@color/colorAccent" />
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:paddingRight="10dp"
+                    app:srcCompat="@drawable/neracaijo"></ImageView>
+                <TextView
+                    android:layout_width="40dp"
+                    android:layout_height="wrap_content"
+                    android:paddingTop="5dp"
+                    android:textColor="@color/colorAccent"
+                    android:textAlignment="center"
+                    android:text="0"
+                    android:id="@+id/textView_total_berat" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:paddingTop="5dp"
+                    android:text="Kg"
+                    android:textAlignment="center"
+                    android:textColor="@color/colorAccent" />
+            </LinearLayout>
+        </LinearLayout>
+        <ListView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:scrollingCache="false"
+            android:smoothScrollbar="true"
+            android:dividerHeight="10dp"
+            tools:listitem="@layout/item_epc"
+            android:id="@+id/listView_data" />
+        <LinearLayout
+            android:id="@+id/layout_empty"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingBottom="50dp"
+            android:visibility="gone">
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/svg_kotor_empty"
+                android:padding="10dp"
+                android:layout_gravity="center"
+                />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:lineSpacingExtra="1sp"
+                android:textStyle="bold"
+                android:layout_gravity="center"
+                android:textSize="18sp"
+                android:layout_marginBottom="7dp"
+                android:text="Belum ada data" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:lineSpacingExtra="5sp"
+                android:translationY="-2.4sp"
+                android:textSize="18sp"
+                android:gravity="center_horizontal|top"
+                android:layout_gravity="center"
+                android:alpha="0.7"
+                android:text="kamu belum memiliki linen kotor." />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:lineSpacingExtra="5sp"
+                android:translationY="-2.4sp"
+                android:layout_gravity="center"
+                android:textSize="18sp"
+                android:gravity="center_horizontal|top"
+                android:alpha="0.7"
+                android:text="Tambahkan sekarang jika ada " />
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/tombol1"
+            android:orientation="horizontal">
+            <Button
+                android:id="@+id/button_start"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:padding="5dp"
+                android:textSize="16dp"
+                android:textColor="@color/colorWhite"
+                android:layout_marginRight="10dp"
+                android:textAllCaps="false"
+                android:background="@drawable/btn_ijo"
+                android:text="Mulai Scan"/>
+
+
+
+        </LinearLayout>
+    </LinearLayout>
+</LinearLayout>

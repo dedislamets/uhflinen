@@ -5,12 +5,12 @@
         android:icon="@drawable/ic_home"
         android:title="Home" />
     <item android:id="@+id/menuMonitor"
-        android:icon="@drawable/ic_scanner_black_24dp"
-        android:title="Security" />
+        android:icon="@drawable/dry_cleaning"
+        android:title="Jemput" />
     <item android:id="@+id/menuRequest"
-        android:icon="@drawable/ic_description_black_24dp"
+        android:icon="@drawable/request"
         android:title="Request" />
     <item android:id="@+id/menuSettings"
-        android:icon="@drawable/ic_settings"
+        android:icon="@drawable/setting"
         android:title="Settings" />
 </menu>

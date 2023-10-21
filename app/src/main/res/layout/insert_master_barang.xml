@@ -1,243 +1,349 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout  xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView  xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_height="match_parent"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:fillViewport="true"
     android:orientation="vertical">
-
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="16dp">
-
+        android:weightSum="1"
+        android:orientation="vertical">
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:paddingLeft="10dp"
+                android:layout_marginTop="10dp">
+                <TextView
+                    android:layout_width="70dp"
+                    android:layout_height="wrap_content"
+                    android:text="Tanggal" />
+            </LinearLayout>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:paddingHorizontal="10dp"
+                android:layout_marginTop="5dp">
+                <EditText
+                    android:id="@+id/tanggal"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:cursorVisible="false"
+                    android:background="@drawable/input_border"
+                    android:enabled="false"
+                    android:textSize="16dp"
+                    android:focusable="false"
+                    android:focusableInTouchMode="false"
+                    android:hint="Tanggal"></EditText>
+
+            </LinearLayout>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:paddingLeft="10dp"
+                android:layout_marginTop="10dp">
+                <TextView
+                    android:layout_width="70dp"
+                    android:layout_height="wrap_content"
+                    android:text="Ruangan" />
+            </LinearLayout>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:paddingHorizontal="10dp"
+                android:layout_marginTop="5dp">
+                <Spinner android:id="@+id/spinner1"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:background="@drawable/spinner_border"
+                    />
+            </LinearLayout>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:paddingLeft="10dp"
+                android:layout_marginTop="10dp">
+                <TextView
+                    android:layout_width="70dp"
+                    android:layout_height="wrap_content"
+                    android:text="Jenis Brg" />
+            </LinearLayout>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:paddingHorizontal="10dp"
+                android:layout_marginTop="5dp">
+                <Spinner android:id="@+id/spinner2"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:background="@drawable/spinner_border"
+                    />
+            </LinearLayout>
+        </LinearLayout>
+        <ProgressBar
+            android:id="@+id/progress_bar"
+            style="@style/Base.Widget.AppCompat.ProgressBar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:indeterminate="true"
+            android:visibility="gone" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/panelList"
+            android:layout_below="@id/form1"
+            android:paddingHorizontal="20dp"
             android:orientation="horizontal">
-
             <TextView
-                android:layout_width="100dp"
+                android:layout_width="wrap_content"
+                android:paddingBottom="10dp"
+                android:layout_marginTop="10dp"
+                android:textSize="16dp"
+                android:layout_weight="0.5"
+                android:textStyle="bold"
+                android:textFontWeight="700"
+                android:textColor="#101828"
                 android:layout_height="wrap_content"
-                android:textFontWeight="800"
-                android:text="Ruangan" />
-
-            <Spinner android:id="@+id/spinner1"
-                android:layout_width="0dp"
+                android:text="Item List">
+            </TextView>
+            <ImageView
+                android:id="@+id/btnCekData"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:background="@drawable/spinner_border"
-                android:layout_marginLeft="16dp"
-                android:layout_marginRight="16dp"
-                 />
-
-
-
+                android:layout_marginTop="11dp"
+                android:paddingRight="5dp"
+                app:srcCompat="@drawable/baseline_dataset_linked_24"></ImageView>
+            <TextView
+                android:layout_width="wrap_content"
+                android:id="@+id/txtCekData"
+                android:paddingBottom="10dp"
+                android:layout_marginTop="10dp"
+                android:layout_marginRight="10dp"
+                android:textSize="16dp"
+                android:textStyle="bold"
+                android:textFontWeight="900"
+                android:textAlignment="textEnd"
+                android:textColor="#101828"
+                android:layout_height="wrap_content"
+                android:text="Cek Data">
+            </TextView>
+            <ImageView
+                android:id="@+id/btnUlangi"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="11dp"
+                android:paddingRight="5dp"
+                app:srcCompat="@drawable/ic_sync_black_24dp"></ImageView>
+            <TextView
+                android:layout_width="wrap_content"
+                android:paddingBottom="10dp"
+                android:layout_marginTop="10dp"
+                android:textSize="16dp"
+                android:textStyle="bold"
+                android:textFontWeight="900"
+                android:textAlignment="textEnd"
+                android:textColor="#101828"
+                android:layout_height="wrap_content"
+                android:text="Ulangi">
+            </TextView>
         </LinearLayout>
-
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginTop="16dp">
-            <TextView
-                android:layout_width="100dp"
+            android:id="@+id/panelListView"
+            android:orientation="vertical"
+            android:paddingHorizontal="10dp"
+            >
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:textFontWeight="800"
-                android:text="Tanggal" />
-
-            <EditText
-                android:id="@+id/tanggal"
-                android:layout_width="0dp"
+                android:id="@+id/lscan"
+                android:focusable="true"
+                android:focusableInTouchMode="true"
+                android:layout_marginBottom="0dp"
+                android:orientation="horizontal">
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="11dp"
+                    android:layout_weight="0.1"
+                    app:srcCompat="@drawable/barcode"></ImageView>
+                <EditText
+                    android:id="@+id/textView_scan"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginLeft="5dp"
+                    android:enabled="true"
+                    android:layout_marginRight="5dp"
+                    android:textColorHint="#98A2B3"
+                    android:hint="Masukkan kode serial disini.."></EditText>
+                <TextView
+                    android:id="@+id/txtTambah"
+                    android:layout_width="wrap_content"
+                    android:textSize="16dp"
+                    android:textStyle="bold"
+                    android:paddingRight="15dp"
+                    android:textColor="#101828"
+                    android:layout_height="wrap_content"
+                    android:text="@string/tambah" />
+            </LinearLayout>
+            <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:layout_marginLeft="16dp"
-                android:cursorVisible="false"
-                android:enabled="false"
-                android:focusable="false"
-                android:focusableInTouchMode="false"
-                android:hint="Tanggal"></EditText>
+                android:padding="10dp"
+                android:visibility="visible"
+                android:id="@+id/linear_sum"
+                android:background="@color/backgroundModal">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Total : "
+                    />
+                <TextView
+                    android:layout_width="60dp"
+                    android:layout_height="wrap_content"
+                    android:text="0"
+                    android:textAlignment="center"
+                    android:id="@+id/textView_tag"
+                    android:layout_marginRight="20dp" />
+            </LinearLayout>
 
         </LinearLayout>
-
         <LinearLayout
+            android:id="@+id/linear_title"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginHorizontal="10dp"
             android:orientation="horizontal"
-            android:layout_marginTop="16dp">
+            android:background="@color/gre2">
             <TextView
-                android:layout_width="100dp"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textFontWeight="800"
-                android:text="Jenis Brg" />
-
-            <Spinner android:id="@+id/spinner2"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:layout_marginLeft="16dp"
-                android:background="@drawable/spinner_border"
-                android:layout_marginRight="16dp"
+                android:gravity="center"
+                android:layout_margin="5dp"
+                android:textColor="@color/colorWhite"
+                android:text="No."
                 />
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
 
+                android:layout_margin="5dp"
+                android:layout_weight="1"
+                android:textColor="@color/colorWhite"
+                android:textAlignment="center"
+                android:text="Serial/EPC"
+                />
+            <TextView
+                android:layout_width="150dp"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:layout_margin="5dp"
+                android:textColor="@color/colorWhite"
+                android:text="Status"
+                android:id="@+id/textView_status" />
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_marginHorizontal="10dp"
+            android:layout_height="wrap_content">
+            <ListView
+                android:id="@+id/listView_data"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:dividerHeight="5dp"
+                android:nestedScrollingEnabled="true"
+                android:divider="@color/colorWhite"
+                android:layout_weight="1"
+                android:focusable="false" />
+        </LinearLayout>
+        <LinearLayout
+            android:id="@+id/layout_empty"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            android:orientation="vertical"
+            android:paddingBottom="50dp">
+            <ImageView
+                android:layout_width="250dp"
+                android:layout_height="wrap_content"
+                android:src="@drawable/kumpulanbaju"
+                android:padding="10dp"
+                android:layout_gravity="center"
+                />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:lineSpacingExtra="1sp"
+                android:textStyle="bold"
+                android:layout_gravity="center"
+                android:textSize="18sp"
+                android:layout_marginBottom="7dp"
+                android:text="Belum ada data" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:lineSpacingExtra="5sp"
+                android:translationY="-2.4sp"
+                android:textSize="18sp"
+                android:gravity="center_horizontal|top"
+                android:layout_gravity="center"
+                android:alpha="0.7"
+                android:text="kamu belum masukkan linen." />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:lineSpacingExtra="5sp"
+                android:translationY="-2.4sp"
+                android:layout_gravity="center"
+                android:textSize="18sp"
+                android:gravity="center_horizontal|top"
+                android:alpha="0.7"
+                android:text="Tambahkan sekarang jika ada " />
         </LinearLayout>
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:id="@+id/lscan"
+            android:padding="5dp"
             android:orientation="horizontal">
-            <TextView
-                android:layout_width="100dp"
+            <Button
+                android:id="@+id/button_start"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textFontWeight="800"
-                android:text="Scan Tag" />
+                android:layout_weight="0.5"
+                android:background="@drawable/btn_ijo"
+                android:textColor="@color/colorWhite"
+                android:layout_marginRight="10dp"
+                android:text="@string/start_inventory_epc"/>
 
-            <EditText
-                android:id="@+id/textView_scan"
-                android:layout_width="0dp"
+            <Button
+                android:id="@+id/button_simpan"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:layout_marginLeft="16dp"
-                android:enabled="true"
-                android:layout_marginRight="16dp"
-                android:hint=""></EditText>
+                android:textColor="@color/colorWhite"
+                android:background="@drawable/btn_ijo"
+                android:layout_weight="0.5"
+                android:text="@string/simpan"/>
+
         </LinearLayout>
-
-
     </LinearLayout>
-
-    <LinearLayout
-        android:orientation="horizontal"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:padding="5dp"
-        android:id="@+id/linear_sum"
-        android:background="@color/blu">
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/all_epc_sum"
-            />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text=" "
-            android:id="@+id/textView_tag" />
-
-    </LinearLayout>
-
-    <LinearLayout
-        android:id="@+id/linear_title"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:background="@color/gre2">
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:gravity="center"
-            android:layout_margin="5dp"
-            android:textColor="@color/colorWhite"
-            android:text="No."
-            />
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-
-            android:layout_margin="5dp"
-            android:layout_weight="1"
-            android:textColor="@color/colorWhite"
-            android:textAlignment="center"
-            android:text="Serial/EPC"
-            />
-        <TextView
-            android:layout_width="150dp"
-            android:layout_height="wrap_content"
-            android:gravity="center"
-            android:layout_margin="5dp"
-            android:textColor="@color/colorWhite"
-            android:text="Status"
-            android:id="@+id/textView_status" />
-
-    </LinearLayout>
-
-    <!--    <LinearLayout-->
-<!--        android:layout_width="match_parent"-->
-<!--        android:layout_height="142dp"-->
-<!--        android:layout_margin="10dp"-->
-<!--        android:orientation="horizontal">-->
-
-<!--        <CheckBox-->
-<!--            android:id="@+id/checkBox_multi"-->
-<!--            android:layout_width="wrap_content"-->
-<!--            android:layout_height="wrap_content"-->
-<!--            android:checked="false"-->
-<!--            android:text="@string/multi_mode" />-->
-
-<!--    </LinearLayout>-->
-
-    <ListView
-        android:id="@+id/listView_data"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_weight="1" />
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-
-        android:padding="5dp"
-        android:orientation="horizontal">
-        <Button
-            android:id="@+id/button_start"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:background="@drawable/btn_gradient"
-            android:textColor="@color/colorWhite"
-            android:layout_marginRight="10dp"
-            android:text="@string/start_inventory_epc"/>
-
-        <Button
-            android:id="@+id/button_clear_epc"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:minWidth="100dp"
-            android:textColor="@color/colorWhite"
-            android:background="@drawable/btn_gradient"
-            android:text="@string/clear"/>
-
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-
-        android:padding="5dp"
-        android:orientation="horizontal">
-        <Button
-            android:id="@+id/button_simpan"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textColor="@color/colorWhite"
-            android:background="@drawable/btn_gradient"
-            android:layout_weight="1"
-            android:text="@string/simpan"/>
-        <Button
-            android:id="@+id/button_sync"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:visibility="gone"
-            android:text="Sync"/>
-        <Button
-            android:id="@+id/button_remove"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:visibility="gone"
-            android:layout_weight="1"
-            android:text="Remove All"/>
-    </LinearLayout>
-
-</LinearLayout >
+</ScrollView >

@@ -30,6 +30,7 @@ import androidx.core.app.ComponentActivity.ExtraData
 import android.icu.lang.UCharacter.GraphemeClusterBreak.T
 import android.net.ConnectivityManager
 import androidx.appcompat.widget.Toolbar
+import androidx.recyclerview.widget.RecyclerView
 import com.android.volley.Request
 import com.android.volley.Response
 import com.android.volley.toolbox.StringRequest
@@ -87,20 +88,18 @@ import java.time.format.DateTimeFormatter
 
         btnAdd = findViewById(R.id.btnAdd) as Button
         btnSync = findViewById(R.id.button_sync) as Button
-        btnExport = findViewById(R.id.button_eksport) as Button
 
         tanggal = findViewById(R.id.tanggal) as EditText
         list = findViewById(R.id.list) as ListView
 
         val empty = findViewById(R.id.layout_empty) as RelativeLayout
-        list.setEmptyView(empty)
+        //list.setEmptyView(empty)
 
         btnAdd.setOnClickListener(this)
         tanggal.setOnClickListener(this)
         btnExport.setOnClickListener(this)
         list.setOnItemClickListener { parent, view, position, id ->
 
-//            Toast.makeText(this, "Clicked item : $position",Toast.LENGTH_SHORT).show()
             val intentBiasa = Intent(this, KotorActivity::class.java)
             val selectedFromList = parent.getItemAtPosition(position)
             var vi = view
@@ -116,22 +115,9 @@ import java.time.format.DateTimeFormatter
 
         btnSync.setOnClickListener(this)
         updateLabel()
-        syncData()
+        //syncData()
 
         getSupportActionBar()?.setTitle("LINEN KOTOR")
-//
-//        toolbar.title =  "LINEN KOTOR"
-//        toolbar.setNavigationIcon(R.drawable.ic_arrow_back_black_24dp)
-//
-//        toolbar?.setNavigationOnClickListener {
-//            startActivity(
-//                Intent(
-//                    applicationContext,
-//                    MainActivity::class.java
-//                )
-//            )
-//        }
-//
         getSupportActionBar()?.setDisplayHomeAsUpEnabled(true)
         getSupportActionBar()?.setDisplayShowHomeEnabled(true)
 
@@ -140,8 +126,8 @@ import java.time.format.DateTimeFormatter
      override fun onStart() {
          super.onStart()
          try {
-//             registerReceiver(broadCastReceiver,IntentFilter(DATA_SAVED_BROADCAST))
-//             registerReceiver(NetworkStateChecker(), IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION))
+             registerReceiver(broadCastReceiver,IntentFilter(DATA_SAVED_BROADCAST))
+             registerReceiver(NetworkStateChecker(), IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION))
          }catch (e: Throwable){ }
 
      }
